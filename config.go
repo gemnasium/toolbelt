@@ -6,22 +6,18 @@ import (
 )
 
 type Config struct {
-	Api_key        string
-	Site           string
-	Use_ssl        bool
-	Api_version    string
-	Project_branch string
-	Ignored_paths  []string
+	APIEndpoint   string   `yaml:"api_endpoint"`
+	APIKey        string   `yaml:"api_key"`
+	ProjectBranch string   `yaml:"project_branch"`
+	IgnoredPaths  []string `yaml:"ignored_paths"`
 }
 
 // Load config from config file
 //
 func NewConfig(config_data []byte) (*Config, error) {
 	config := &Config{
-		Site:           "gemnasium.com",
-		Use_ssl:        true,
-		Api_version:    "v3",
-		Project_branch: "master",
+		APIEndpoint:   "https://gemnasium.com/api/v3",
+		ProjectBranch: "master",
 	}
 	goyaml.Unmarshal(config_data, config)
 	return config, nil

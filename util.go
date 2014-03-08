@@ -10,13 +10,6 @@ import (
 	"path/filepath"
 )
 
-var nrc *netrc.Netrc
-
-const (
-	netrcFilename           = ".netrc"
-	acceptPasswordFromStdin = true
-)
-
 func netrcPath() string {
 	if s := os.Getenv("NETRC_PATH"); s != "" {
 		return s
@@ -25,21 +18,21 @@ func netrcPath() string {
 	return filepath.Join(os.Getenv("HOME"), netrcFilename)
 }
 
-var loadNetrc = func() {
-	if nrc == nil {
-		var err error
-		if nrc, err = netrc.ParseFile(netrcPath()); err != nil {
-			if os.IsNotExist(err) {
-				nrc = &netrc.Netrc{}
-				return
-			}
+var loadNetrc = func() *netrc.Netrc {
+	nrc, err := netrc.ParseFile(netrcPath())
+	if err != nil {
+		if os.IsNotExist(err) {
+			nrc = &netrc.Netrc{}
+		}
+		if err != nil {
 			printFatal("loading netrc: " + err.Error())
 		}
 	}
+	return nrc
 }
 
 func saveCreds(host, user, pass string) error {
-	loadNetrc()
+	nrc := loadNetrc()
 	m := nrc.FindMachine(host)
 	if m == nil || m.IsDefault() {
 		m = nrc.NewMachine(host, user, pass, "")
@@ -59,7 +52,7 @@ var writeNetrcFile = func(body []byte) error {
 }
 
 func removeCreds(host string) error {
-	loadNetrc()
+	nrc := loadNetrc()
 	nrc.RemoveMachine(host)
 
 	body, err := nrc.MarshalText()

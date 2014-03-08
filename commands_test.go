@@ -54,8 +54,10 @@ func TestLogin(t *testing.T) {
 
 	netrcFile := bytes.NewBufferString("")
 
-	loadNetrc = func() {
-		nrc, _ = netrc.Parse(netrcFile)
+	loadNetrc = func() *netrc.Netrc {
+		nrc, _ := netrc.Parse(netrcFile)
+		return nrc
+
 	}
 	// don't actually write to the file
 	writeNetrcFile = func(body []byte) error {
@@ -86,10 +88,11 @@ func TestLogout(t *testing.T) {
 	  password abcxyz123
 	`)
 
-	loadNetrc = func() {
-		nrc, _ = netrc.Parse(netrcFile)
-	}
 	config := &Config{APIEndpoint: "http://127.0.0.1/api"}
+	loadNetrc = func() *netrc.Netrc {
+		nrc, _ := netrc.Parse(netrcFile)
+		return nrc
+	}
 	set := flag.NewFlagSet("test", 0)
 	ctx := cli.NewContext(nil, set, set)
 

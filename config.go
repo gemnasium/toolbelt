@@ -25,7 +25,6 @@ func NewConfig(config_data []byte) (*Config, error) {
 }
 
 func LoadConfigFile(filepath string) (*Config, error) {
-
 	config_data, err := ioutil.ReadFile(filepath)
 	if err != nil {
 		return nil, err

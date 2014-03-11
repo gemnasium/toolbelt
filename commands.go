@@ -76,6 +76,9 @@ func Logout(ctx *cli.Context, config *Config) error {
 // The first arg is used as the project name.
 // If no arg is provided, the user will be prompted to enter a project name.
 func CreateProject(ctx *cli.Context, config *Config) error {
+	if err := AttemptLogin(ctx, config); err != nil {
+		return err
+	}
 	project := ctx.Args().First()
 	if project == "" {
 		fmt.Printf("Enter project name: ")
@@ -90,12 +93,19 @@ func CreateProject(ctx *cli.Context, config *Config) error {
 		fmt.Println(err)
 		os.Exit(1)
 	}
-	res, err := http.Post(config.APIEndpoint+CREATE_PROJECT_PATH, "application/json", bytes.NewReader(projectAsJson))
+	client := &http.Client{}
+	req, err := http.NewRequest("POST", config.APIEndpoint+CREATE_PROJECT_PATH, bytes.NewReader(projectAsJson))
 	if err != nil {
 		return err
 	}
-	if res.StatusCode != http.StatusOK {
-		return fmt.Errorf("Server returned non-200 status:  %v\n", res.Status)
+	req.SetBasicAuth("x", config.APIKey)
+	req.Header.Add("Content-Type", "application/json")
+	resp, err := client.Do(req)
+	if err != nil {
+		return err
+	}
+	if resp.StatusCode != http.StatusOK {
+		return fmt.Errorf("Server returned non-200 status:  %v\n", resp.Status)
 		os.Exit(1)
 	}
 

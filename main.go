@@ -15,6 +15,7 @@ func main() {
 	app.Email = "support@gemnasium.com"
 	app.Flags = []cli.Flag{
 		cli.StringFlag{"config, c", ".gemnasium.yml", "Path to config file"},
+		cli.StringFlag{"token, t", "", "Pass your api token in command line"},
 	}
 
 	config, _ := NewConfig([]byte{})

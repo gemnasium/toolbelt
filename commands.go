@@ -8,7 +8,6 @@ import (
 	"io/ioutil"
 	"net/http"
 	"net/url"
-	"os"
 	"strings"
 )
 
@@ -90,8 +89,7 @@ func CreateProject(ctx *cli.Context, config *Config) error {
 
 	projectAsJson, err := json.Marshal(&map[string]string{"name": project, "branch": "master"})
 	if err != nil {
-		fmt.Println(err)
-		os.Exit(1)
+		return err
 	}
 	client := &http.Client{}
 	req, err := http.NewRequest("POST", config.APIEndpoint+CREATE_PROJECT_PATH, bytes.NewReader(projectAsJson))
@@ -105,8 +103,7 @@ func CreateProject(ctx *cli.Context, config *Config) error {
 		return err
 	}
 	if resp.StatusCode != http.StatusOK {
-		return fmt.Errorf("Server returned non-200 status:  %v\n", resp.Status)
-		os.Exit(1)
+		return fmt.Errorf("Server returned non-200 status: %v\n", resp.Status)
 	}
 
 	fmt.Printf("Project '%s' created!\n", project)

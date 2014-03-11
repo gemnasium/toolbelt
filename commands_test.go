@@ -5,7 +5,6 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"flag"
-	"fmt"
 	"github.com/bgentry/go-netrc/netrc"
 	"github.com/codegangsta/cli"
 	"net/http"
@@ -116,29 +115,12 @@ func TestLogout(t *testing.T) {
 	}
 }
 
-func TestCreateProjectWithoutToken(t *testing.T) {
-	config, _ := NewConfig([]byte{})
-	set := flag.NewFlagSet("test", 0)
-	set.Parse([]string{"my_project"})
-	ctx := cli.NewContext(nil, set, set)
-	err := CreateProject(ctx, config)
-	if err != ErrEmptyToken {
-		t.Error(err)
-	}
-}
-
-func TestCreateProject(t *testing.T) {
-
-	apiKey := "abcxyz123"
-
-	// Fake gemnasium api
+func CreateProjectTestServer(t *testing.T, APIKey string) *httptest.Server {
 	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 
-		var siteAuth = "Basic " + base64.StdEncoding.EncodeToString([]byte("x:"+apiKey))
+		var siteAuth = "Basic " + base64.StdEncoding.EncodeToString([]byte("x:"+APIKey))
 		auth := r.Header.Get("Authorization")
 		if siteAuth != auth {
-			fmt.Println(siteAuth)
-			fmt.Println(auth)
 			w.WriteHeader(http.StatusUnauthorized)
 		}
 
@@ -168,6 +150,15 @@ func TestCreateProject(t *testing.T) {
 			w.WriteHeader(http.StatusBadRequest)
 		}
 	}))
+	return ts
+}
+
+func TestCreateProject(t *testing.T) {
+
+	apiKey := "abcxyz123"
+
+	// Fake gemnasium api
+	ts := CreateProjectTestServer(t, apiKey)
 	defer ts.Close()
 
 	config := &Config{APIEndpoint: ts.URL, APIKey: apiKey}
@@ -176,6 +167,35 @@ func TestCreateProject(t *testing.T) {
 	ctx := cli.NewContext(nil, set, set)
 	err := CreateProject(ctx, config)
 	if err != nil {
+		t.Error(err)
+	}
+}
+
+func TestCreateProjectWithWrongToken(t *testing.T) {
+
+	apiKey := "abcxyz123"
+
+	// Fake gemnasium api
+	ts := CreateProjectTestServer(t, apiKey)
+	defer ts.Close()
+
+	config := &Config{APIEndpoint: ts.URL, APIKey: "invalid_key"}
+	set := flag.NewFlagSet("test", 0)
+	set.Parse([]string{"my_project"})
+	ctx := cli.NewContext(nil, set, set)
+	err := CreateProject(ctx, config)
+	if err.Error() != "Server returned non-200 status: 401 Unauthorized\n" {
+		t.Error(err)
+	}
+}
+
+func TestCreateProjectWithoutToken(t *testing.T) {
+	config, _ := NewConfig([]byte{})
+	set := flag.NewFlagSet("test", 0)
+	set.Parse([]string{"my_project"})
+	ctx := cli.NewContext(nil, set, set)
+	err := CreateProject(ctx, config)
+	if err != ErrEmptyToken {
 		t.Error(err)
 	}
 }

@@ -70,12 +70,12 @@ func TestLogin(t *testing.T) {
 		t.Error(err)
 	}
 
-	expectedNetrcFile := `
-machine 127.0.0.1
+	expectedNetrcFile :=
+		`machine 127.0.0.1
 	login batman@example.com
 	password abcxyz123`
 	if netrcFile.String() != expectedNetrcFile {
-		t.Errorf("Expected netrcFile to contain 127.0.0.1, got: %s\n", netrcFile.String())
+		t.Errorf("Expected netrcFile to be:\n%#v\ngot:\n%#v\n", expectedNetrcFile, netrcFile.String())
 	}
 }
 

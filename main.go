@@ -2,8 +2,9 @@ package main
 
 import (
 	"fmt"
-	"github.com/codegangsta/cli"
 	"os"
+
+	"github.com/codegangsta/cli"
 )
 
 func main() {
@@ -19,6 +20,10 @@ func main() {
 	}
 
 	config, _ := NewConfig([]byte{})
+	app.Before = func(c *cli.Context) error {
+		config, _ = LoadConfigFile(c.String("config"))
+		return nil // Don't fail if config file isn't found
+	}
 	app.Commands = []cli.Command{
 		{
 			Name:      "login",
@@ -56,7 +61,7 @@ func main() {
 			},
 		},
 		{
-			Name:      "install",
+			Name:      "configure",
 			ShortName: "i",
 			Usage:     "Install configuration for an existing project",
 			Action: func(ctx *cli.Context) {

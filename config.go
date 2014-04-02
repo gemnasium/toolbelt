@@ -2,7 +2,8 @@ package main
 
 import (
 	"io/ioutil"
-	"launchpad.net/goyaml"
+
+	"gopkg.in/yaml.v1"
 )
 
 type Config struct {
@@ -19,7 +20,7 @@ func NewConfig(config_data []byte) (*Config, error) {
 		APIEndpoint:   "https://gemnasium.com/api/v3",
 		ProjectBranch: "master",
 	}
-	goyaml.Unmarshal(config_data, config)
+	yaml.Unmarshal(config_data, config)
 	return config, nil
 
 }

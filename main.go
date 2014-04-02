@@ -21,14 +21,16 @@ func main() {
 
 	config, _ := NewConfig([]byte{})
 	app.Before = func(c *cli.Context) error {
-		config, _ = LoadConfigFile(c.String("config"))
+		new_config, _ := LoadConfigFile(c.String("config"))
+		if new_config != nil {
+			config = new_config
+		}
 		return nil // Don't fail if config file isn't found
 	}
 	app.Commands = []cli.Command{
 		{
-			Name:      "login",
-			ShortName: "l",
-			Usage:     "Login",
+			Name:  "login",
+			Usage: "Login",
 			Action: func(ctx *cli.Context) {
 				err := Login(ctx, config)
 				if err != nil {
@@ -53,7 +55,7 @@ func main() {
 			ShortName: "c",
 			Usage:     "Create a new project on Gemnasium",
 			Action: func(ctx *cli.Context) {
-				err := CreateProject(ctx, config)
+				err := CreateProject(ctx, config, os.Stdin)
 				if err != nil {
 					fmt.Println(err)
 					os.Exit(1)
@@ -61,9 +63,8 @@ func main() {
 			},
 		},
 		{
-			Name:      "configure",
-			ShortName: "i",
-			Usage:     "Install configuration for an existing project",
+			Name:  "configure",
+			Usage: "Install configuration for an existing project",
 			Action: func(ctx *cli.Context) {
 				println("Project configured!")
 			},

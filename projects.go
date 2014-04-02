@@ -4,6 +4,8 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
+	"io"
+	"io/ioutil"
 	"net/http"
 
 	"github.com/codegangsta/cli"
@@ -16,7 +18,7 @@ const (
 // Create a new project on gemnasium.
 // The first arg is used as the project name.
 // If no arg is provided, the user will be prompted to enter a project name.
-func CreateProject(ctx *cli.Context, config *Config) error {
+func CreateProject(ctx *cli.Context, config *Config, r io.Reader) error {
 	if err := AttemptLogin(ctx, config); err != nil {
 		return err
 	}
@@ -28,8 +30,15 @@ func CreateProject(ctx *cli.Context, config *Config) error {
 			return err
 		}
 	}
+	var description string
+	fmt.Printf("Enter project description: ")
+	_, err := fmt.Fscanf(r, "%s", &description)
+	if err != nil {
+		return err
+	}
+	fmt.Println("") // quickfix for goconvey
 
-	projectAsJson, err := json.Marshal(&map[string]string{"name": project, "branch": "master"})
+	projectAsJson, err := json.Marshal(&map[string]string{"name": project, "description": description})
 	if err != nil {
 		return err
 	}
@@ -44,11 +53,23 @@ func CreateProject(ctx *cli.Context, config *Config) error {
 	if err != nil {
 		return err
 	}
+	defer resp.Body.Close()
+	body, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		return err
+	}
+
 	if resp.StatusCode != http.StatusOK {
 		return fmt.Errorf("Server returned non-200 status: %v\n", resp.Status)
 	}
 
-	fmt.Printf("Project '%s' created!\n", project)
+	// Parse server response
+	var proj map[string]interface{}
+	if err := json.Unmarshal(body, &proj); err != nil {
+		return err
+	}
+	fmt.Printf("Project '%s' created! (Remaining private slots: %v)\n", project, proj["remaining_slot_count"])
+	fmt.Printf("Slug: %s\n", proj["slug"])
 	return nil
 }
 

@@ -6,6 +6,7 @@ import (
 	"flag"
 	"net/http"
 	"net/http/httptest"
+	"strings"
 	"testing"
 
 	"github.com/codegangsta/cli"
@@ -32,7 +33,7 @@ func CreateProjectTestServer(t *testing.T, APIKey string) *httptest.Server {
 
 		decoder := json.NewDecoder(r.Body)
 		var project struct {
-			Name, Branch string
+			Name, Description string
 		}
 		err := decoder.Decode(&project)
 		if err != nil {
@@ -40,7 +41,7 @@ func CreateProjectTestServer(t *testing.T, APIKey string) *httptest.Server {
 		}
 
 		w.Header().Set("Content-Type", "application/json")
-		if project.Name != "" && project.Branch != "" {
+		if project.Name != "" && project.Description != "" {
 			w.Write([]byte(`{"name": "my_project", "slug": "my_project_slug", "remaining_slot_count": 1 }`))
 		} else {
 			w.WriteHeader(http.StatusBadRequest)
@@ -61,7 +62,8 @@ func TestCreateProject(t *testing.T) {
 	set := flag.NewFlagSet("test", 0)
 	set.Parse([]string{"my_project"})
 	ctx := cli.NewContext(nil, set, set)
-	err := CreateProject(ctx, config)
+	r := strings.NewReader("Project description\n")
+	err := CreateProject(ctx, config, r)
 	if err != nil {
 		t.Error(err)
 	}
@@ -79,7 +81,8 @@ func TestCreateProjectWithWrongToken(t *testing.T) {
 	set := flag.NewFlagSet("test", 0)
 	set.Parse([]string{"my_project"})
 	ctx := cli.NewContext(nil, set, set)
-	err := CreateProject(ctx, config)
+	r := strings.NewReader("Project description\n")
+	err := CreateProject(ctx, config, r)
 	if err.Error() != "Server returned non-200 status: 401 Unauthorized\n" {
 		t.Error(err)
 	}
@@ -90,7 +93,8 @@ func TestCreateProjectWithoutToken(t *testing.T) {
 	set := flag.NewFlagSet("test", 0)
 	set.Parse([]string{"my_project"})
 	ctx := cli.NewContext(nil, set, set)
-	err := CreateProject(ctx, config)
+	r := strings.NewReader("Project description\n")
+	err := CreateProject(ctx, config, r)
 	if err != ErrEmptyToken {
 		t.Error(err)
 	}

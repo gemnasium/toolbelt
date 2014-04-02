@@ -25,6 +25,9 @@ ignored_paths:                # Paths you want to ignore when searching for depe
 	if config.APIKey != "5590c4910af0ee9428a1447f6ef8090a" {
 		t.Errorf("config.APIKey should be '5590c4910af0ee9428a1447f6ef8090a', was %s", config.APIKey)
 	}
+	if config.ProjectSlug != "e22c6e1a59e77e595949c936e3e797ea" {
+		t.Errorf("config.ProjectSlug should be 'e22c6e1a59e77e595949c936e3e797ea', was %s", config.ProjectSlug)
+	}
 	if config.APIEndpoint != "https://gemnasium.com/api/v3" {
 		t.Errorf("config.APIEndpoint should be true, was %s", config.APIEndpoint)
 	}

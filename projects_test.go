@@ -4,8 +4,10 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"flag"
+	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
+	"os"
 	"strings"
 	"testing"
 
@@ -96,6 +98,27 @@ func TestCreateProjectWithoutToken(t *testing.T) {
 	r := strings.NewReader("Project description\n")
 	err := CreateProject(ctx, config, r)
 	if err != ErrEmptyToken {
+		t.Error(err)
+	}
+}
+
+func TestConfigureProject(t *testing.T) {
+
+	config, _ := NewConfig([]byte{})
+
+	// set first param
+	set := flag.NewFlagSet("test", 0)
+	set.Parse([]string{"project_slug"})
+	ctx := cli.NewContext(nil, set, set)
+
+	tmp, err := ioutil.TempFile("", "gemnasium")
+	if err != nil {
+		t.Error(err)
+	}
+	defer tmp.Close()
+	defer os.Remove(tmp.Name())
+	err = ConfigureProject(ctx, config, os.Stdin, tmp)
+	if err != nil {
 		t.Error(err)
 	}
 }

@@ -6,9 +6,12 @@ import (
 	"fmt"
 	"io"
 	"io/ioutil"
+	"log"
 	"net/http"
+	"os"
 
 	"github.com/codegangsta/cli"
+	"gopkg.in/yaml.v1"
 )
 
 const (
@@ -69,7 +72,34 @@ func CreateProject(ctx *cli.Context, config *Config, r io.Reader) error {
 		return err
 	}
 	fmt.Printf("Project '%s' created! (Remaining private slots: %v)\n", project, proj["remaining_slot_count"])
-	fmt.Printf("Slug: %s\n", proj["slug"])
+	fmt.Printf("To configure this project, use the following command:\ngemnasium configure %s\n", proj["slug"])
+	return nil
+}
+
+func ConfigureProject(ctx *cli.Context, config *Config, r io.Reader, f *os.File) error {
+
+	slug := ctx.Args().First()
+	if slug == "" {
+		fmt.Printf("Enter project slug: ")
+		_, err := fmt.Scanln(&slug)
+		if err != nil {
+			return err
+		}
+	}
+
+	// We just create a file with project_config for now.
+	projectConfig := &map[string]string{"project_slug": slug}
+	body, err := yaml.Marshal(&projectConfig)
+	if err != nil {
+		log.Fatalf("error: %v", err)
+	}
+	// write content to the file
+	_, err = f.Write(body)
+	if err != nil {
+		return err
+	}
+	// Issue a Sync to flush writes to stable storage.
+	f.Sync()
 	return nil
 }
 

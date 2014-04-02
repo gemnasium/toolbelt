@@ -64,9 +64,20 @@ func main() {
 		},
 		{
 			Name:  "configure",
-			Usage: "Install configuration for an existing project",
+			Usage: "Install configuration for an existing project. Warning: this command will overwrite existing .gemnasium.yml file",
 			Action: func(ctx *cli.Context) {
-				println("Project configured!")
+				f, err := os.Create(".gemnasium.yml")
+				if err != nil {
+					fmt.Println(err)
+					os.Exit(1)
+				}
+				defer f.Close()
+
+				err = ConfigureProject(ctx, config, os.Stdin, f)
+				if err != nil {
+					fmt.Println(err)
+					os.Exit(1)
+				}
 			},
 		},
 		{

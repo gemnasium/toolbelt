@@ -9,6 +9,7 @@ import (
 type Config struct {
 	APIEndpoint   string   `yaml:"api_endpoint"`
 	APIKey        string   `yaml:"api_key"`
+	ProjectSlug   string   `yaml:"project_slug"`
 	ProjectBranch string   `yaml:"project_branch"`
 	IgnoredPaths  []string `yaml:"ignored_paths"`
 }

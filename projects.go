@@ -9,22 +9,122 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"path/filepath"
+	"regexp"
 
 	"github.com/codegangsta/cli"
+	"github.com/wsxiaoys/terminal/color"
 	"gopkg.in/yaml.v1"
 )
 
 const (
-	CREATE_PROJECT_PATH = "/projects"
+	LIST_PROJECTS_PATH         = "/projects"
+	CREATE_PROJECT_PATH        = "/projects"
+	SUPPORTED_DEPENDENCY_FILES = `(Gemfile|Gemfile\.lock|.*\.gemspec|package\.json|npm-shrinkwrap\.json|setup\.py|requirements\.txt|requires\.txt|composer\.json|composer\.lock)$`
 )
+
+type Project struct {
+	Slug              string `json:"slug"`
+	Name              string `json:"name"`
+	Description       string `json:"description"`
+	Origin            string `json:"origin"`
+	Private           bool   `json:"private"`
+	Status            string `json:"status"`
+	Monitored         bool   `json:"monitored"`
+	UnmonitoredReason string `json:"unmonitored_reason"`
+}
+
+// List projects on gemnasium
+func ListProjects(config *Config) error {
+	client := &http.Client{}
+	req, err := http.NewRequest("GET", config.APIEndpoint+LIST_PROJECTS_PATH, nil)
+	if err != nil {
+		return err
+	}
+	req.SetBasicAuth("x", config.APIKey)
+	req.Header.Add("Content-Type", "application/json")
+	resp, err := client.Do(req)
+	if err != nil {
+		return err
+	}
+	defer resp.Body.Close()
+	body, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		return err
+	}
+
+	if resp.StatusCode != http.StatusOK {
+		return fmt.Errorf("Server returned non-200 status: %v\n", resp.Status)
+	}
+
+	// if RawFormat flag is set, don't format the output
+	if config.RawFormat {
+		fmt.Printf("%s", body)
+		return nil
+	}
+
+	// Parse server response
+	var projects []Project
+	if err := json.Unmarshal(body, &projects); err != nil {
+		return err
+	}
+	color.Printf("@{g!}Found %d projects:\n\n", len(projects))
+	var private string
+	for _, project := range projects {
+		if project.Private {
+			private = "(private)"
+		} else {
+			private = "" // reset
+		}
+		fmt.Printf("%s - slug: %s %s\n", project.Name, project.Slug, private)
+	}
+	return nil
+}
+
+// Display project details
+// Project is retrieved from its slug
+func GetProject(slug string, config *Config) error {
+	client := &http.Client{}
+	url := fmt.Sprintf("%s/projects/%s", config.APIEndpoint, slug)
+	req, err := http.NewRequest("GET", url, nil)
+	if err != nil {
+		return err
+	}
+	req.SetBasicAuth("x", config.APIKey)
+	req.Header.Add("Content-Type", "application/json")
+	resp, err := client.Do(req)
+	if err != nil {
+		return err
+	}
+	defer resp.Body.Close()
+	body, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		return err
+	}
+
+	if resp.StatusCode != http.StatusOK {
+		return fmt.Errorf("Server returned non-200 status: %v\n", resp.Status)
+	}
+
+	// if RawFormat flag is set, don't format the output
+	if config.RawFormat {
+		fmt.Printf("%s", body)
+		return nil
+	}
+
+	// Parse server response
+	var project Project
+	if err := json.Unmarshal(body, &project); err != nil {
+		return err
+	}
+	fmt.Printf("%v\n", project)
+	return nil
+}
 
 // Create a new project on gemnasium.
 // The first arg is used as the project name.
 // If no arg is provided, the user will be prompted to enter a project name.
 func CreateProject(ctx *cli.Context, config *Config, r io.Reader) error {
-	if err := AttemptLogin(ctx, config); err != nil {
-		return err
-	}
 	project := ctx.Args().First()
 	if project == "" {
 		fmt.Printf("Enter project name: ")
@@ -100,6 +200,36 @@ func ConfigureProject(ctx *cli.Context, config *Config, r io.Reader, f *os.File)
 	}
 	// Issue a Sync to flush writes to stable storage.
 	f.Sync()
+	return nil
+}
+
+type DependancyFile struct {
+	Filename string
+	SHA      string
+	Content  string
+}
+
+func PushDependancies(ctx *cli.Context, config *Config) error {
+	deps := []DependancyFile{}
+	searchDeps := func(path string, info os.FileInfo, err error) error {
+
+		// Skip excluded paths
+		if info.IsDir() && info.Name() == ".git" {
+			return filepath.SkipDir
+		}
+		matched, err := regexp.MatchString(SUPPORTED_DEPENDENCY_FILES, info.Name())
+		if err != nil {
+			return err
+		}
+
+		if matched {
+			fmt.Printf("[debug] Found: %s\n", info.Name())
+			deps = append(deps, DependancyFile{Filename: info.Name(), SHA: "sha", Content: "content"})
+		}
+		return nil
+	}
+	filepath.Walk(".", searchDeps)
+	fmt.Printf("deps %+v\n", deps)
 	return nil
 }
 

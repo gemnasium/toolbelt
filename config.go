@@ -12,6 +12,7 @@ type Config struct {
 	ProjectSlug   string   `yaml:"project_slug"`
 	ProjectBranch string   `yaml:"project_branch"`
 	IgnoredPaths  []string `yaml:"ignored_paths"`
+	RawFormat     bool     `yaml:"raw_format"`
 }
 
 // Load config from config file

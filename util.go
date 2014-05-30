@@ -3,16 +3,17 @@ package main
 import (
 	"errors"
 	"fmt"
-	"github.com/bgentry/go-netrc/netrc"
-	"github.com/bgentry/speakeasy"
-	"github.com/codegangsta/cli"
-	"github.com/heroku/hk/term"
-	"github.com/mgutz/ansi"
 	"io/ioutil"
 	"log"
 	"net/url"
 	"os"
 	"path/filepath"
+
+	"github.com/bgentry/go-netrc/netrc"
+	"github.com/bgentry/speakeasy"
+	"github.com/codegangsta/cli"
+	"github.com/heroku/hk/term"
+	"github.com/mgutz/ansi"
 )
 
 // Error codes returned by auth failures
@@ -137,8 +138,8 @@ func readPassword(prompt string) (password string, err error) {
 //
 // Each source will override previous one (token flag has priority above all).
 //
-// Returns a ErrEmptyToken error if all sources failed
-func AttemptLogin(ctx *cli.Context, config *Config) error {
+// WARNING: Directly exit the programm in case of error
+func AttemptLogin(ctx *cli.Context, config *Config) {
 	// APIKey has been set localy in config file
 	if config.APIKey == "" {
 		_, config.APIKey = getCreds(config)
@@ -149,8 +150,6 @@ func AttemptLogin(ctx *cli.Context, config *Config) error {
 		config.APIKey = ctx.GlobalString("token")
 	}
 	if config.APIKey == "" {
-		return ErrEmptyToken
+		ExitWithError(ErrEmptyToken)
 	}
-	return nil
-
 }

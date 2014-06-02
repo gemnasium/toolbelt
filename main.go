@@ -96,6 +96,7 @@ func main() {
 					ShortName: "c",
 					Usage:     "Create a new project on Gemnasium",
 					Action: func(ctx *cli.Context) {
+						AttemptLogin(ctx, config)
 						err := CreateProject(ctx, config, os.Stdin)
 						if err != nil {
 							fmt.Println(err)

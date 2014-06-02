@@ -28,7 +28,7 @@ ignored_paths:                # Paths you want to ignore when searching for depe
 	if config.ProjectSlug != "e22c6e1a59e77e595949c936e3e797ea" {
 		t.Errorf("config.ProjectSlug should be 'e22c6e1a59e77e595949c936e3e797ea', was %s", config.ProjectSlug)
 	}
-	if config.APIEndpoint != "https://gemnasium.com/api/v3" {
+	if config.APIEndpoint != "https://api.gemnasium.com/v1" {
 		t.Errorf("config.APIEndpoint should be true, was %s", config.APIEndpoint)
 	}
 	if config.ProjectBranch != "develop" {

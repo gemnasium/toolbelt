@@ -90,18 +90,6 @@ func TestCreateProjectWithWrongToken(t *testing.T) {
 	}
 }
 
-func TestCreateProjectWithoutToken(t *testing.T) {
-	config, _ := NewConfig([]byte{})
-	set := flag.NewFlagSet("test", 0)
-	set.Parse([]string{"my_project"})
-	ctx := cli.NewContext(nil, set, set)
-	r := strings.NewReader("Project description\n")
-	err := CreateProject(ctx, config, r)
-	if err != ErrEmptyToken {
-		t.Error(err)
-	}
-}
-
 func TestConfigureProject(t *testing.T) {
 
 	config, _ := NewConfig([]byte{})

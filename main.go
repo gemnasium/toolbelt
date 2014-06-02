@@ -85,7 +85,7 @@ func main() {
 					},
 					Action: func(ctx *cli.Context) {
 						AttemptLogin(ctx, config)
-						err := GetProject(ctx.String("slug"), config)
+						err := GetProject(ctx.Args().First(), config)
 						if err != nil {
 							ExitWithError(err)
 						}

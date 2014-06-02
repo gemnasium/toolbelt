@@ -64,19 +64,24 @@ func ListProjects(config *Config) error {
 	}
 
 	// Parse server response
-	var projects []Project
+	var projects map[string][]Project
 	if err := json.Unmarshal(body, &projects); err != nil {
 		return err
 	}
 	color.Printf("@{g!}Found %d projects:\n\n", len(projects))
 	var private string
-	for _, project := range projects {
-		if project.Private {
-			private = "(private)"
-		} else {
-			private = "" // reset
+	for owner, _ := range projects {
+		if owner != "owned" {
+			fmt.Printf("\nShared by: %s\n\n", owner)
 		}
-		fmt.Printf("%s - slug: %s %s\n", project.Name, project.Slug, private)
+		for _, project := range projects[owner] {
+			if project.Private {
+				private = "(private)"
+			} else {
+				private = "" // reset
+			}
+			fmt.Printf("%s: \"%s\" %s\n", project.Slug, project.Name, private)
+		}
 	}
 	return nil
 }
@@ -117,7 +122,7 @@ func GetProject(slug string, config *Config) error {
 	if err := json.Unmarshal(body, &project); err != nil {
 		return err
 	}
-	fmt.Printf("%v\n", project)
+	fmt.Printf("%#v\n", project)
 	return nil
 }
 

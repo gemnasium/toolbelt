@@ -19,7 +19,7 @@ type Config struct {
 //
 func NewConfig(config_data []byte) (*Config, error) {
 	config := &Config{
-		APIEndpoint:   "https://gemnasium.com/api/v3",
+		APIEndpoint:   "https://api.gemnasium.com/v1",
 		ProjectBranch: "master",
 	}
 	yaml.Unmarshal(config_data, config)

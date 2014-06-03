@@ -3,6 +3,7 @@ package main
 import (
 	"bytes"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"io/ioutil"
@@ -10,6 +11,7 @@ import (
 	"net/http"
 	"os"
 	"path/filepath"
+	"reflect"
 	"regexp"
 
 	"github.com/codegangsta/cli"
@@ -24,8 +26,8 @@ const (
 )
 
 type Project struct {
-	Slug              string `json:"slug"`
 	Name              string `json:"name"`
+	Slug              string `json:"slug"`
 	Description       string `json:"description"`
 	Origin            string `json:"origin"`
 	Private           bool   `json:"private"`
@@ -95,6 +97,9 @@ func ListProjects(config *Config) error {
 // Display project details
 // Project is retrieved from its slug
 func GetProject(slug string, config *Config) error {
+	if slug == "" {
+		return errors.New("[slug] can't be empty")
+	}
 	client := &http.Client{}
 	url := fmt.Sprintf("%s/projects/%s", config.APIEndpoint, slug)
 	req, err := http.NewRequest("GET", url, nil)
@@ -128,7 +133,17 @@ func GetProject(slug string, config *Config) error {
 	if err := json.Unmarshal(body, &project); err != nil {
 		return err
 	}
-	fmt.Printf("%#v\n", project)
+	s := reflect.ValueOf(&project).Elem()
+	typeOfT := s.Type()
+	for i := 0; i < s.NumField(); i++ {
+		f := s.Field(i)
+		if typeOfT.Field(i).Name == "Status" {
+			color.Println(fmt.Sprintf("%18.18s: %s", "Status", statusDots(project.Status)))
+		} else {
+			fmt.Printf("%18.18s: %v\n", typeOfT.Field(i).Name, f.Interface())
+		}
+	}
+
 	return nil
 }
 
@@ -251,4 +266,20 @@ func Changelog(package_name string) (string, error) {
 		lot's of new features!
 		`
 	return changelog, nil
+}
+
+func statusDots(status string) string {
+	var dots string
+	switch status {
+	case "red":
+		dots = "@{k!}\u2B24 @{k!}\u2B24 @{r!}\u2B24"
+	case "yellow":
+		dots = "@{k!}\u2B24 @{y!}\u2B24 @{k!}\u2B24"
+	case "green":
+		dots = "@{g!}\u2B24 @{k!}\u2B24 @{k!}\u2B24"
+	default:
+		dots = "@{k!}\u2B24 @{k!}\u2B24 @{k!}\u2B24"
+	}
+	return dots
+
 }

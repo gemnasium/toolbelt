@@ -26,14 +26,14 @@ const (
 )
 
 type Project struct {
-	Name              string `json:"name"`
-	Slug              string `json:"slug"`
-	Description       string `json:"description"`
-	Origin            string `json:"origin"`
-	Private           bool   `json:"private"`
-	Status            string `json:"status"`
-	Monitored         bool   `json:"monitored"`
-	UnmonitoredReason string `json:"unmonitored_reason"`
+	Name              string `json:"name,omitempty"`
+	Slug              string `json:"slug,omitempty"`
+	Description       string `json:"description,omitempty"`
+	Origin            string `json:"origin,omitempty"`
+	Private           bool   `json:"private,omitempty"`
+	Status            string `json:"status,omitempty"`
+	Monitored         bool   `json:"monitored,omitempty"`
+	UnmonitoredReason string `json:"unmonitored_reason,omitempty"`
 }
 
 // List projects on gemnasium
@@ -150,24 +150,23 @@ func GetProject(slug string, config *Config) error {
 // Create a new project on gemnasium.
 // The first arg is used as the project name.
 // If no arg is provided, the user will be prompted to enter a project name.
-func CreateProject(ctx *cli.Context, config *Config, r io.Reader) error {
-	project := ctx.Args().First()
-	if project == "" {
+func CreateProject(projectName string, config *Config, r io.Reader) error {
+	project := &Project{Name: projectName}
+	if project.Name == "" {
 		fmt.Printf("Enter project name: ")
-		_, err := fmt.Scanln(&project)
+		_, err := fmt.Scanln(&project.Name)
 		if err != nil {
 			return err
 		}
 	}
-	var description string
 	fmt.Printf("Enter project description: ")
-	_, err := fmt.Fscanf(r, "%s", &description)
+	_, err := fmt.Fscanf(r, "%s", &project.Description)
 	if err != nil {
 		return err
 	}
 	fmt.Println("") // quickfix for goconvey
 
-	projectAsJson, err := json.Marshal(&map[string]string{"name": project, "description": description})
+	projectAsJson, err := json.Marshal(project)
 	if err != nil {
 		return err
 	}
@@ -193,18 +192,17 @@ func CreateProject(ctx *cli.Context, config *Config, r io.Reader) error {
 	}
 
 	// Parse server response
-	var proj map[string]interface{}
-	if err := json.Unmarshal(body, &proj); err != nil {
+	var jsonResp map[string]interface{}
+	if err := json.Unmarshal(body, &jsonResp); err != nil {
 		return err
 	}
-	fmt.Printf("Project '%s' created! (Remaining private slots: %v)\n", project, proj["remaining_slot_count"])
-	fmt.Printf("To configure this project, use the following command:\ngemnasium configure %s\n", proj["slug"])
+	fmt.Printf("Project '%s' created! (Remaining private slots: %v)\n", project.Name, jsonResp["remaining_slot_count"])
+	fmt.Printf("To configure this project, use the following command:\ngemnasium projects configure %s\n", jsonResp["slug"])
 	return nil
 }
 
-func ConfigureProject(ctx *cli.Context, config *Config, r io.Reader, f *os.File) error {
+func ConfigureProject(slug string, config *Config, r io.Reader, f *os.File) error {
 
-	slug := ctx.Args().First()
 	if slug == "" {
 		fmt.Printf("Enter project slug: ")
 		_, err := fmt.Scanln(&slug)
@@ -229,14 +227,14 @@ func ConfigureProject(ctx *cli.Context, config *Config, r io.Reader, f *os.File)
 	return nil
 }
 
-type DependancyFile struct {
+type DependencyFile struct {
 	Filename string
 	SHA      string
 	Content  string
 }
 
-func PushDependancies(ctx *cli.Context, config *Config) error {
-	deps := []DependancyFile{}
+func PushDependencies(ctx *cli.Context, config *Config) error {
+	deps := []DependencyFile{}
 	searchDeps := func(path string, info os.FileInfo, err error) error {
 
 		// Skip excluded paths
@@ -250,7 +248,7 @@ func PushDependancies(ctx *cli.Context, config *Config) error {
 
 		if matched {
 			fmt.Printf("[debug] Found: %s\n", info.Name())
-			deps = append(deps, DependancyFile{Filename: info.Name(), SHA: "sha", Content: "content"})
+			deps = append(deps, DependencyFile{Filename: info.Name(), SHA: "sha", Content: "content"})
 		}
 		return nil
 	}

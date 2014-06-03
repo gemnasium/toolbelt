@@ -3,15 +3,12 @@ package main
 import (
 	"encoding/base64"
 	"encoding/json"
-	"flag"
 	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
 	"os"
 	"strings"
 	"testing"
-
-	"github.com/codegangsta/cli"
 )
 
 func CreateProjectTestServer(t *testing.T, APIKey string) *httptest.Server {
@@ -61,11 +58,8 @@ func TestCreateProject(t *testing.T) {
 	defer ts.Close()
 
 	config := &Config{APIEndpoint: ts.URL, APIKey: apiKey}
-	set := flag.NewFlagSet("test", 0)
-	set.Parse([]string{"my_project"})
-	ctx := cli.NewContext(nil, set, set)
 	r := strings.NewReader("Project description\n")
-	err := CreateProject(ctx, config, r)
+	err := CreateProject("test_project", config, r)
 	if err != nil {
 		t.Error(err)
 	}
@@ -80,11 +74,8 @@ func TestCreateProjectWithWrongToken(t *testing.T) {
 	defer ts.Close()
 
 	config := &Config{APIEndpoint: ts.URL, APIKey: "invalid_key"}
-	set := flag.NewFlagSet("test", 0)
-	set.Parse([]string{"my_project"})
-	ctx := cli.NewContext(nil, set, set)
 	r := strings.NewReader("Project description\n")
-	err := CreateProject(ctx, config, r)
+	err := CreateProject("test_project", config, r)
 	if err.Error() != "Server returned non-200 status: 401 Unauthorized\n" {
 		t.Error(err)
 	}
@@ -95,17 +86,13 @@ func TestConfigureProject(t *testing.T) {
 	config, _ := NewConfig([]byte{})
 
 	// set first param
-	set := flag.NewFlagSet("test", 0)
-	set.Parse([]string{"project_slug"})
-	ctx := cli.NewContext(nil, set, set)
-
 	tmp, err := ioutil.TempFile("", "gemnasium")
 	if err != nil {
 		t.Error(err)
 	}
 	defer tmp.Close()
 	defer os.Remove(tmp.Name())
-	err = ConfigureProject(ctx, config, os.Stdin, tmp)
+	err = ConfigureProject("my_slug", config, os.Stdin, tmp)
 	if err != nil {
 		t.Error(err)
 	}

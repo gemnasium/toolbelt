@@ -97,7 +97,8 @@ func main() {
 					Usage:     "Create a new project on Gemnasium",
 					Action: func(ctx *cli.Context) {
 						AttemptLogin(ctx, config)
-						err := CreateProject(ctx, config, os.Stdin)
+						projectName := ctx.Args().First()
+						err := CreateProject(projectName, config, os.Stdin)
 						if err != nil {
 							fmt.Println(err)
 							os.Exit(1)
@@ -115,19 +116,27 @@ func main() {
 						}
 						defer f.Close()
 
-						err = ConfigureProject(ctx, config, os.Stdin, f)
+						slug := ctx.Args().First()
+						err = ConfigureProject(slug, config, os.Stdin, f)
 						if err != nil {
 							fmt.Println(err)
 							os.Exit(1)
 						}
 					},
 				},
+			},
+		},
+		{
+			Name:      "dependency_files",
+			ShortName: "df",
+			Usage:     "Dependency files",
+			Subcommands: []cli.Command{
 				{
 					Name:      "push",
 					ShortName: "p",
 					Usage:     "Push dependencies files on Gemnasium",
 					Action: func(ctx *cli.Context) {
-						err := PushDependancies(ctx, config)
+						err := PushDependencies(ctx, config)
 						if err != nil {
 							fmt.Println(err)
 							os.Exit(1)

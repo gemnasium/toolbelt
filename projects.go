@@ -35,6 +35,7 @@ type Project struct {
 }
 
 // List projects on gemnasium
+// TODO: Add a flag to display unmonitored projects too
 func ListProjects(config *Config) error {
 	client := &http.Client{}
 	req, err := http.NewRequest("GET", config.APIEndpoint+LIST_PROJECTS_PATH, nil)
@@ -68,20 +69,25 @@ func ListProjects(config *Config) error {
 	if err := json.Unmarshal(body, &projects); err != nil {
 		return err
 	}
-	color.Printf("@{g!}Found %d projects:\n\n", len(projects))
 	var private string
 	for owner, _ := range projects {
+		MonitoredProjectsCount := 0
 		if owner != "owned" {
 			fmt.Printf("\nShared by: %s\n\n", owner)
 		}
 		for _, project := range projects[owner] {
+			if !project.Monitored {
+				continue
+			}
 			if project.Private {
-				private = "(private)"
+				private = "[private]"
 			} else {
 				private = "" // reset
 			}
-			fmt.Printf("%s: \"%s\" %s\n", project.Slug, project.Name, private)
+			fmt.Printf("  %s: \"%s\" %s\n", project.Slug, project.Name, private)
+			MonitoredProjectsCount += 1
 		}
+		color.Printf("@{g!}Found %d projects (%d unmonitored are hidden)\n\n", MonitoredProjectsCount, len(projects[owner])-MonitoredProjectsCount)
 	}
 	return nil
 }

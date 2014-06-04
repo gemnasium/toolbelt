@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"os"
+	"strings"
 
 	"github.com/codegangsta/cli"
 	"github.com/wsxiaoys/terminal/color"
@@ -162,6 +163,22 @@ func main() {
 				}
 
 				println(changelog)
+			},
+		},
+		{
+			Name:      "eval",
+			ShortName: "e",
+			Usage:     "Live deps evaluation",
+			Flags: []cli.Flag{
+				cli.StringFlag{"files, f", "", "list of files to evaluate, separated with a comma."},
+			},
+			Action: func(ctx *cli.Context) {
+				AttemptLogin(ctx, config)
+				files := strings.Split(ctx.String("files"), ",")
+				err := LiveEvaluation(files, config)
+				if err != nil {
+					ExitWithError(err)
+				}
 			},
 		},
 	}

@@ -13,8 +13,13 @@ import (
 	"path/filepath"
 	"reflect"
 	"regexp"
+	"sort"
+	"strconv"
+	"strings"
+	"time"
 
 	"github.com/codegangsta/cli"
+	"github.com/olekukonko/tablewriter"
 	"github.com/wsxiaoys/terminal/color"
 	"gopkg.in/yaml.v1"
 )
@@ -22,6 +27,7 @@ import (
 const (
 	LIST_PROJECTS_PATH         = "/projects"
 	CREATE_PROJECT_PATH        = "/projects"
+	LIVE_EVAL_PATH             = "/evaluate"
 	SUPPORTED_DEPENDENCY_FILES = `(Gemfile|Gemfile\.lock|.*\.gemspec|package\.json|npm-shrinkwrap\.json|setup\.py|requirements\.txt|requires\.txt|composer\.json|composer\.lock)$`
 )
 
@@ -34,6 +40,41 @@ type Project struct {
 	Status            string `json:"status,omitempty"`
 	Monitored         bool   `json:"monitored,omitempty"`
 	UnmonitoredReason string `json:"unmonitored_reason,omitempty"`
+}
+
+type Package struct {
+	Name string `json:"name"`
+	Slug string `json:"slug"`
+	Type string `json:"type"`
+}
+
+type Advisory struct {
+	ID               int      `json:"id"`
+	Title            string   `json:"title"`
+	Identifier       string   `json:"identifier"`
+	Description      string   `json:"description"`
+	Solution         string   `json:"solution"`
+	AffectedVersions string   `json:"affected_versions"`
+	Package          Package  `json:"package"`
+	CuredVersions    string   `json:"cured_versions"`
+	Credits          string   `json:"credits"`
+	Links            []string `json:"links"`
+}
+
+type Dependency struct {
+	Requirement   string  `json:"requirement"`
+	LockedVersion string  `json:"locked_version"`
+	Package       Package `json:"package"`
+	Type          string  `json:"type"`
+	FirstLevel    bool    `json:"first_level"`
+	Color         string  `json:"color"`
+	Advisories    []Advisory
+}
+
+type DependencyFile struct {
+	Name    string `json:"name"`
+	SHA     string `json:"sha,omitempty"`
+	Content []byte `json:"content"`
 }
 
 // List projects on gemnasium
@@ -227,12 +268,6 @@ func ConfigureProject(slug string, config *Config, r io.Reader, f *os.File) erro
 	return nil
 }
 
-type DependencyFile struct {
-	Filename string
-	SHA      string
-	Content  string
-}
-
 func PushDependencies(ctx *cli.Context, config *Config) error {
 	deps := []DependencyFile{}
 	searchDeps := func(path string, info os.FileInfo, err error) error {
@@ -248,7 +283,7 @@ func PushDependencies(ctx *cli.Context, config *Config) error {
 
 		if matched {
 			fmt.Printf("[debug] Found: %s\n", info.Name())
-			deps = append(deps, DependencyFile{Filename: info.Name(), SHA: "sha", Content: "content"})
+			deps = append(deps, DependencyFile{Name: info.Name(), SHA: "sha", Content: []byte("content")})
 		}
 		return nil
 	}
@@ -266,18 +301,142 @@ func Changelog(package_name string) (string, error) {
 	return changelog, nil
 }
 
+func LiveEvaluation(files []string, config *Config) error {
+	// Create an array with files content
+	depFiles := make([]DependencyFile, len(files))
+	for i, file := range files {
+		depFile := DependencyFile{Name: file}
+		content, err := ioutil.ReadFile(file)
+		if err != nil {
+			return err
+		}
+		depFile.Content = content
+		depFiles[i] = depFile
+	}
+
+	requestDeps := map[string][]DependencyFile{"dependency_files": depFiles}
+	depFilesJSON, err := json.Marshal(requestDeps)
+	if err != nil {
+		return err
+	}
+	client := &http.Client{}
+	req, err := http.NewRequest("POST", config.APIEndpoint+LIVE_EVAL_PATH, bytes.NewReader(depFilesJSON))
+	if err != nil {
+		return err
+	}
+	req.SetBasicAuth("x", config.APIKey)
+	req.Header.Add("Content-Type", "application/json")
+	resp, err := client.Do(req)
+	if err != nil {
+		return err
+	}
+	defer resp.Body.Close()
+	body, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		return err
+	}
+
+	if resp.StatusCode != http.StatusOK {
+		return fmt.Errorf("Server returned non-200 status: %v\n", resp.Status)
+	}
+
+	// Parse server response
+	var jsonResp map[string]interface{}
+	if err := json.Unmarshal(body, &jsonResp); err != nil {
+		return err
+	}
+
+	// Wait until job is done
+	url := fmt.Sprintf("%s%s/%s", config.APIEndpoint, LIVE_EVAL_PATH, jsonResp["job_id"])
+	req, err = http.NewRequest("GET", url, nil)
+	if err != nil {
+		return err
+	}
+	req.SetBasicAuth("x", config.APIKey)
+	req.Header.Add("Content-Type", "application/json")
+	var response struct {
+		Status string `json:"status"`
+		Result struct {
+			RuntimeStatus     string       `json:"runtime_status"`
+			DevelopmentStatus string       `json:"development_status"`
+			Dependencies      []Dependency `json:"dependencies"`
+		} `json:"result"`
+	}
+	var iter int // used to display the little dots for each loop bellow
+	for {
+		// use the same request again and again
+		resp, err := client.Do(req)
+		if err != nil {
+			return err
+		}
+		defer resp.Body.Close()
+		body, err := ioutil.ReadAll(resp.Body)
+		if err != nil {
+			return err
+		}
+
+		if resp.StatusCode != http.StatusOK {
+			response.Status = "error"
+		}
+
+		if err = json.Unmarshal(body, &response); err != nil {
+			return err
+		}
+
+		if !config.RawFormat { // don't display status if RawFormat
+			iter += 1
+			fmt.Printf("\rJob Status: %s%s", response.Status, strings.Repeat(".", iter))
+		}
+		if response.Status != "working" && response.Status != "queued" { // Job has completed or failed or whatever
+			if config.RawFormat {
+				fmt.Printf("%s\n", body)
+				return nil
+			}
+			break
+		}
+		// Wait 1s before trying again
+		time.Sleep(time.Second * 1)
+	}
+
+	color.Println(fmt.Sprintf("\n\n%-12.12s %s", "Run. Status", statusDots(response.Result.RuntimeStatus)))
+	color.Println(fmt.Sprintf("%-12.12s %s\n\n", "Dev. Status", statusDots(response.Result.DevelopmentStatus)))
+
+	// Display deps in an ascii table
+	table := tablewriter.NewWriter(os.Stdout)
+	// TODO: Add a "type" header in deps have more than 1 type
+	table.SetHeader([]string{"Dependencies", "Requirements", "Locked", "Status", "Advisories"})
+
+	for _, dep := range response.Result.Dependencies {
+		// transform dep.Advisories to []string
+		advisories := make([]string, len(dep.Advisories))
+		for i, adv := range dep.Advisories {
+			advisories[i] = strconv.Itoa(adv.ID)
+		}
+		sort.Strings(advisories)
+
+		var levelPrefix string
+		if !dep.FirstLevel {
+			levelPrefix = "+-- "
+		}
+		table.Append([]string{levelPrefix + dep.Package.Name, dep.Requirement, dep.LockedVersion, dep.Color, strings.Join(advisories, ", ")})
+	}
+	table.Render() // Send output
+	return nil
+}
+
+// Return unicode colorized text dots for each status
+// Status is supposed to red|yellow|green otherwise "none" will be returned
 func statusDots(status string) string {
 	var dots string
 	switch status {
 	case "red":
-		dots = "@{k!}\u2B24 @{k!}\u2B24 @{r!}\u2B24"
+		dots = "@k\u2B24 @k\u2B24 @r\u2B24  @{|}(red)"
 	case "yellow":
-		dots = "@{k!}\u2B24 @{y!}\u2B24 @{k!}\u2B24"
+		dots = "@k\u2B24 @y\u2B24 @k\u2B24  @{|}(yellow)"
 	case "green":
-		dots = "@{g!}\u2B24 @{k!}\u2B24 @{k!}\u2B24"
+		dots = "@g\u2B24 @k\u2B24 @k\u2B24  @{|}(green)"
 	default:
-		dots = "@{k!}\u2B24 @{k!}\u2B24 @{k!}\u2B24"
+		dots = "@k\u2B24 @k\u2B24 @k\u2B24  @{|}(none)"
 	}
 	return dots
-
 }

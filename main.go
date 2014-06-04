@@ -147,25 +147,6 @@ func main() {
 			},
 		},
 		{
-			Name:      "changelog",
-			ShortName: "cl",
-			Usage:     "Check changelog for a given package",
-			Action: func(c *cli.Context) {
-				package_name := c.Args().First()
-				if package_name == "" {
-					fmt.Println("Error: You must specify a package name")
-					os.Exit(1)
-				}
-				changelog, err := Changelog(package_name)
-				if err != nil {
-					fmt.Println("Error: You must specify a package name")
-					os.Exit(1)
-				}
-
-				println(changelog)
-			},
-		},
-		{
 			Name:      "eval",
 			ShortName: "e",
 			Usage:     "Live deps evaluation",

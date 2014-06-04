@@ -292,15 +292,6 @@ func PushDependencies(ctx *cli.Context, config *Config) error {
 	return nil
 }
 
-func Changelog(package_name string) (string, error) {
-	changelog := `
-		# 1.2.3
-
-		lot's of new features!
-		`
-	return changelog, nil
-}
-
 func LiveEvaluation(files []string, config *Config) error {
 	// Create an array with files content
 	depFiles := make([]DependencyFile, len(files))

@@ -13,8 +13,6 @@ import (
 	"path/filepath"
 	"reflect"
 	"regexp"
-	"sort"
-	"strconv"
 	"strings"
 	"time"
 
@@ -31,55 +29,9 @@ const (
 	SUPPORTED_DEPENDENCY_FILES = `(Gemfile|Gemfile\.lock|.*\.gemspec|package\.json|npm-shrinkwrap\.json|setup\.py|requirements\.txt|requires\.txt|composer\.json|composer\.lock)$`
 )
 
-type Project struct {
-	Name              string `json:"name,omitempty"`
-	Slug              string `json:"slug,omitempty"`
-	Description       string `json:"description,omitempty"`
-	Origin            string `json:"origin,omitempty"`
-	Private           bool   `json:"private,omitempty"`
-	Status            string `json:"status,omitempty"`
-	Monitored         bool   `json:"monitored,omitempty"`
-	UnmonitoredReason string `json:"unmonitored_reason,omitempty"`
-}
-
-type Package struct {
-	Name string `json:"name"`
-	Slug string `json:"slug"`
-	Type string `json:"type"`
-}
-
-type Advisory struct {
-	ID               int      `json:"id"`
-	Title            string   `json:"title"`
-	Identifier       string   `json:"identifier"`
-	Description      string   `json:"description"`
-	Solution         string   `json:"solution"`
-	AffectedVersions string   `json:"affected_versions"`
-	Package          Package  `json:"package"`
-	CuredVersions    string   `json:"cured_versions"`
-	Credits          string   `json:"credits"`
-	Links            []string `json:"links"`
-}
-
-type Dependency struct {
-	Requirement   string  `json:"requirement"`
-	LockedVersion string  `json:"locked_version"`
-	Package       Package `json:"package"`
-	Type          string  `json:"type"`
-	FirstLevel    bool    `json:"first_level"`
-	Color         string  `json:"color"`
-	Advisories    []Advisory
-}
-
-type DependencyFile struct {
-	Name    string `json:"name"`
-	SHA     string `json:"sha,omitempty"`
-	Content []byte `json:"content"`
-}
-
 // List projects on gemnasium
 // TODO: Add a flag to display unmonitored projects too
-func ListProjects(config *Config) error {
+func ListProjects(config *Config, privateProjectsOnly bool) error {
 	client := &http.Client{}
 	req, err := http.NewRequest("GET", config.APIEndpoint+LIST_PROJECTS_PATH, nil)
 	if err != nil {
@@ -112,24 +64,28 @@ func ListProjects(config *Config) error {
 	if err := json.Unmarshal(body, &projects); err != nil {
 		return err
 	}
-	var private string
 	for owner, _ := range projects {
 		MonitoredProjectsCount := 0
 		if owner != "owned" {
 			fmt.Printf("\nShared by: %s\n\n", owner)
 		}
+		table := tablewriter.NewWriter(os.Stdout)
+		table.SetHeader([]string{"Name", "Slug", "Private"})
 		for _, project := range projects[owner] {
-			if !project.Monitored {
+			if !project.Monitored || (!project.Private && privateProjectsOnly) {
 				continue
 			}
+
+			var private string
 			if project.Private {
-				private = "[private]"
+				private = "private"
 			} else {
-				private = "" // reset
+				private = ""
 			}
-			fmt.Printf("  %s: \"%s\" %s\n", project.Slug, project.Name, private)
+			table.Append([]string{project.Name, project.Slug, private})
 			MonitoredProjectsCount += 1
 		}
+		table.Render()
 		color.Printf("@{g!}Found %d projects (%d unmonitored are hidden)\n\n", MonitoredProjectsCount, len(projects[owner])-MonitoredProjectsCount)
 	}
 	return nil
@@ -393,25 +349,7 @@ func LiveEvaluation(files []string, config *Config) error {
 	color.Println(fmt.Sprintf("%-12.12s %s\n\n", "Dev. Status", statusDots(response.Result.DevelopmentStatus)))
 
 	// Display deps in an ascii table
-	table := tablewriter.NewWriter(os.Stdout)
-	// TODO: Add a "type" header in deps have more than 1 type
-	table.SetHeader([]string{"Dependencies", "Requirements", "Locked", "Status", "Advisories"})
-
-	for _, dep := range response.Result.Dependencies {
-		// transform dep.Advisories to []string
-		advisories := make([]string, len(dep.Advisories))
-		for i, adv := range dep.Advisories {
-			advisories[i] = strconv.Itoa(adv.ID)
-		}
-		sort.Strings(advisories)
-
-		var levelPrefix string
-		if !dep.FirstLevel {
-			levelPrefix = "+-- "
-		}
-		table.Append([]string{levelPrefix + dep.Package.Name, dep.Requirement, dep.LockedVersion, dep.Color, strings.Join(advisories, ", ")})
-	}
-	table.Render() // Send output
+	renderDepsAsTable(response.Result.Dependencies, os.Stdout)
 	return nil
 }
 

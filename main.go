@@ -9,6 +9,52 @@ import (
 	"github.com/wsxiaoys/terminal/color"
 )
 
+type Project struct {
+	Name              string `json:"name,omitempty"`
+	Slug              string `json:"slug,omitempty"`
+	Description       string `json:"description,omitempty"`
+	Origin            string `json:"origin,omitempty"`
+	Private           bool   `json:"private,omitempty"`
+	Status            string `json:"status,omitempty"`
+	Monitored         bool   `json:"monitored,omitempty"`
+	UnmonitoredReason string `json:"unmonitored_reason,omitempty"`
+}
+
+type Package struct {
+	Name string `json:"name"`
+	Slug string `json:"slug"`
+	Type string `json:"type"`
+}
+
+type Advisory struct {
+	ID               int      `json:"id"`
+	Title            string   `json:"title"`
+	Identifier       string   `json:"identifier"`
+	Description      string   `json:"description"`
+	Solution         string   `json:"solution"`
+	AffectedVersions string   `json:"affected_versions"`
+	Package          Package  `json:"package"`
+	CuredVersions    string   `json:"cured_versions"`
+	Credits          string   `json:"credits"`
+	Links            []string `json:"links"`
+}
+
+type Dependency struct {
+	Requirement   string  `json:"requirement"`
+	LockedVersion string  `json:"locked_version"`
+	Package       Package `json:"package"`
+	Type          string  `json:"type"`
+	FirstLevel    bool    `json:"first_level"`
+	Color         string  `json:"color"`
+	Advisories    []Advisory
+}
+
+type DependencyFile struct {
+	Name    string `json:"name"`
+	SHA     string `json:"sha,omitempty"`
+	Content []byte `json:"content"`
+}
+
 func main() {
 	app := cli.NewApp()
 	app.Name = "gemnasium"
@@ -69,9 +115,12 @@ func main() {
 					Name:      "list",
 					ShortName: "l",
 					Usage:     "List projects on Gemnasium",
+					Flags: []cli.Flag{
+						cli.BoolFlag{"private, p", "Display only private projects"},
+					},
 					Action: func(ctx *cli.Context) {
 						AttemptLogin(ctx, config)
-						err := ListProjects(config)
+						err := ListProjects(config, ctx.Bool("private"))
 						if err != nil {
 							ExitWithError(err)
 						}
@@ -121,6 +170,27 @@ func main() {
 						err = ConfigureProject(slug, config, os.Stdin, f)
 						if err != nil {
 							fmt.Println(err)
+							os.Exit(1)
+						}
+					},
+				},
+			},
+		},
+		{
+			Name:      "dependencies",
+			ShortName: "d",
+			Usage:     "Dependencies",
+			Subcommands: []cli.Command{
+				{
+					Name:      "list",
+					ShortName: "l",
+					Usage:     "List the first level dependencies of the requested project. Usage: gemnasium deps list [project_slug]",
+					Action: func(ctx *cli.Context) {
+						AttemptLogin(ctx, config)
+						projectSlug := ctx.Args().First()
+						err := ListDependencies(projectSlug, config)
+						if err != nil {
+							printFatal(err.Error())
 							os.Exit(1)
 						}
 					},

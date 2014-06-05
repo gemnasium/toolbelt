@@ -3,8 +3,10 @@ package main
 import (
 	"errors"
 	"fmt"
+	"io"
 	"io/ioutil"
 	"log"
+	"net/http"
 	"net/url"
 	"os"
 	"path/filepath"
@@ -152,4 +154,15 @@ func AttemptLogin(ctx *cli.Context, config *Config) {
 	if config.APIKey == "" {
 		ExitWithError(ErrEmptyToken)
 	}
+}
+
+// Create a new API request, with needed headers for auth and content-type
+func NewAPIRequest(method, urlStr, APIKey string, body io.Reader) (*http.Request, error) {
+	req, err := http.NewRequest(method, urlStr, body)
+	if err != nil {
+		return nil, err
+	}
+	req.SetBasicAuth("x", APIKey)
+	req.Header.Add("Content-Type", "application/json")
+	return req, nil
 }

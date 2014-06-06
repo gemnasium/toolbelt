@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 	"strings"
+	"time"
 
 	"github.com/codegangsta/cli"
 	"github.com/wsxiaoys/terminal/color"
@@ -37,6 +38,13 @@ type Advisory struct {
 	CuredVersions    string   `json:"cured_versions"`
 	Credits          string   `json:"credits"`
 	Links            []string `json:"links"`
+}
+
+type Alert struct {
+	ID       int       `json:"id"`
+	Advisory Advisory  `json:"advisory"`
+	OpenAt   time.Time `json:"open_at"`
+	Status   string    `json:"status"`
 }
 
 type Dependency struct {
@@ -210,6 +218,27 @@ func main() {
 						err := PushDependencies(ctx, config)
 						if err != nil {
 							fmt.Println(err)
+							os.Exit(1)
+						}
+					},
+				},
+			},
+		},
+		{
+			Name:      "alerts",
+			ShortName: "a",
+			Usage:     "Dependency Alerts",
+			Subcommands: []cli.Command{
+				{
+					Name:      "list",
+					ShortName: "l",
+					Usage:     "List the dependency alerts the given project is affected by",
+					Action: func(ctx *cli.Context) {
+						AttemptLogin(ctx, config)
+						projectSlug := ctx.Args().First()
+						err := ListDependencyAlerts(projectSlug, config)
+						if err != nil {
+							printFatal(err.Error())
 							os.Exit(1)
 						}
 					},

@@ -3,6 +3,7 @@ package main
 import (
 	"encoding/base64"
 	"encoding/json"
+	"fmt"
 	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
@@ -96,4 +97,28 @@ func TestConfigureProject(t *testing.T) {
 	if err != nil {
 		t.Error(err)
 	}
+}
+
+func TestSyncProject(t *testing.T) {
+
+	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		r.Header.Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusNoContent)
+		jsonOutput := ""
+		fmt.Fprintln(w, jsonOutput)
+
+	}))
+	defer ts.Close()
+	config := &Config{APIEndpoint: ts.URL}
+	// silent stdout
+	old := os.Stdout
+	_, w, _ := os.Pipe()
+	w.Close()
+	os.Stdout = w
+	err := SyncProject("blah", config)
+	os.Stdout = old
+	if err != nil {
+		t.Errorf("SyncProject failed with err: %s", err)
+	}
+
 }

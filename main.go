@@ -115,7 +115,7 @@ func main() {
 			},
 		},
 		{
-			Name:      "project",
+			Name:      "projects",
 			ShortName: "p",
 			Usage:     "Manage current project",
 			Subcommands: []cli.Command{
@@ -179,6 +179,18 @@ func main() {
 						if err != nil {
 							fmt.Println(err)
 							os.Exit(1)
+						}
+					},
+				},
+				{
+					Name:  "sync",
+					Usage: "Start project synchronization",
+					Action: func(ctx *cli.Context) {
+						AttemptLogin(ctx, config)
+						slug := ctx.Args().First()
+						err := SyncProject(slug, config)
+						if err != nil {
+							ExitWithError(err)
 						}
 					},
 				},

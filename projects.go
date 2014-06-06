@@ -248,6 +248,31 @@ func PushDependencies(ctx *cli.Context, config *Config) error {
 	return nil
 }
 
+func SyncProject(projectSlug string, config *Config) error {
+	if projectSlug == "" {
+		return errors.New("[projectSlug] can't be empty")
+	}
+	client := &http.Client{}
+	url := fmt.Sprintf("%s/projects/%s/sync", config.APIEndpoint, projectSlug)
+	req, err := NewAPIRequest("POST", url, config.APIKey, nil)
+	if err != nil {
+		return err
+	}
+
+	resp, err := client.Do(req)
+	if err != nil {
+		return err
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusNoContent {
+		return fmt.Errorf("Server returned non-200 status: %v\n", resp.Status)
+	}
+
+	color.Printf("@gSynchronization started for project %s\n", projectSlug)
+	return nil
+}
+
 func LiveEvaluation(files []string, config *Config) error {
 	// Create an array with files content
 	depFiles := make([]DependencyFile, len(files))

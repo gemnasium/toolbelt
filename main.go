@@ -94,7 +94,7 @@ func main() {
 					Name:  "login",
 					Usage: "Login",
 					Action: func(ctx *cli.Context) {
-						err := Login(ctx, config)
+						err := Login(config)
 						if err != nil {
 							printFatal(err.Error())
 							os.Exit(1)
@@ -105,7 +105,7 @@ func main() {
 					Name:  "logout",
 					Usage: "Logout",
 					Action: func(ctx *cli.Context) {
-						err := Logout(ctx, config)
+						err := Logout(config)
 						if err != nil {
 							printFatal(err.Error())
 							os.Exit(1)

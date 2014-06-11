@@ -3,13 +3,11 @@ package main
 import (
 	"bytes"
 	"encoding/json"
-	"flag"
 	"net/http"
 	"net/http/httptest"
 	"testing"
 
 	"github.com/bgentry/go-netrc/netrc"
-	"github.com/codegangsta/cli"
 )
 
 func TestLogin(t *testing.T) {
@@ -45,9 +43,6 @@ func TestLogin(t *testing.T) {
 	defer ts.Close()
 
 	config := &Config{APIEndpoint: ts.URL}
-	set := flag.NewFlagSet("test", 0)
-	ctx := cli.NewContext(nil, set, set)
-
 	// don't try to use stdin
 	getCredentials = func() (email, password string, err error) {
 		return "batman@example.com", "secret123", nil
@@ -65,7 +60,7 @@ func TestLogin(t *testing.T) {
 		_, err := netrcFile.Write(body)
 		return err
 	}
-	err := Login(ctx, config)
+	err := Login(config)
 	if err != nil {
 		t.Error(err)
 	}
@@ -94,14 +89,11 @@ func TestLogout(t *testing.T) {
 		nrc, _ := netrc.Parse(netrcFile)
 		return nrc
 	}
-	set := flag.NewFlagSet("test", 0)
-	ctx := cli.NewContext(nil, set, set)
-
 	writeNetrcFile = func(body []byte) error {
 		_, err := netrcFile.Write(body)
 		return err
 	}
-	err := Logout(ctx, config)
+	err := Logout(config)
 	if err != nil {
 		t.Error(err)
 	}

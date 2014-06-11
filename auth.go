@@ -3,8 +3,6 @@ package main
 import (
 	"encoding/json"
 
-	"github.com/codegangsta/cli"
-
 	"bytes"
 	"fmt"
 	"io/ioutil"
@@ -19,7 +17,7 @@ const (
 
 // Login with the user email and password
 // An entry will be created in ~/.netrc on successful login.
-func Login(ctx *cli.Context, config *Config) error {
+func Login(config *Config) error {
 	// Create a function to be overriden in tests
 	email, password, err := getCredentials()
 	if err != nil {
@@ -61,7 +59,7 @@ func Login(ctx *cli.Context, config *Config) error {
 
 // Logout doesn't hit the API of course.
 // It simply removes the corresponding entry in ~/.netrc
-func Logout(ctx *cli.Context, config *Config) error {
+func Logout(config *Config) error {
 	api_url, err := url.Parse(config.APIEndpoint)
 	if err != nil {
 		return err

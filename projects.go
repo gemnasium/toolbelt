@@ -13,8 +13,6 @@ import (
 	"path/filepath"
 	"reflect"
 	"regexp"
-	"strings"
-	"time"
 
 	"github.com/codegangsta/cli"
 	"github.com/olekukonko/tablewriter"
@@ -33,12 +31,11 @@ const (
 // TODO: Add a flag to display unmonitored projects too
 func ListProjects(config *Config, privateProjectsOnly bool) error {
 	client := &http.Client{}
-	req, err := http.NewRequest("GET", config.APIEndpoint+LIST_PROJECTS_PATH, nil)
+	url := config.APIEndpoint + LIST_PROJECTS_PATH
+	req, err := NewAPIRequest("GET", url, config.APIKey, nil)
 	if err != nil {
 		return err
 	}
-	req.SetBasicAuth("x", config.APIKey)
-	req.Header.Add("Content-Type", "application/json")
 	resp, err := client.Do(req)
 	if err != nil {
 		return err
@@ -92,19 +89,17 @@ func ListProjects(config *Config, privateProjectsOnly bool) error {
 }
 
 // Display project details
-// Project is retrieved from its slug
-func GetProject(slug string, config *Config) error {
+// http://docs.gemnasium.apiary.io/#get-%2Fprojects%2F%7Bslug%7D
+func ShowProject(slug string, config *Config) error {
 	if slug == "" {
 		return errors.New("[slug] can't be empty")
 	}
 	client := &http.Client{}
 	url := fmt.Sprintf("%s/projects/%s", config.APIEndpoint, slug)
-	req, err := http.NewRequest("GET", url, nil)
+	req, err := NewAPIRequest("GET", url, config.APIKey, nil)
 	if err != nil {
 		return err
 	}
-	req.SetBasicAuth("x", config.APIKey)
-	req.Header.Add("Content-Type", "application/json")
 	resp, err := client.Do(req)
 	if err != nil {
 		return err
@@ -144,9 +139,63 @@ func GetProject(slug string, config *Config) error {
 	return nil
 }
 
+// Update project details
+// http://docs.gemnasium.apiary.io/#patch-%2Fprojects%2F%7Bslug%7D
+func UpdateProject(slug string, config *Config, name, desc *string, monitored *bool) error {
+	if slug == "" {
+		return errors.New("[slug] can't be empty")
+	}
+
+	update := make(map[string]interface{})
+	if name != nil {
+		update["name"] = *name
+	}
+	if desc != nil {
+		update["desc"] = *desc
+	}
+	if monitored != nil {
+		update["monitored"] = *monitored
+	}
+	projectAsJson, err := json.Marshal(update)
+	if err != nil {
+		return err
+	}
+	client := &http.Client{}
+	url := fmt.Sprintf("%s/projects/%s", config.APIEndpoint, slug)
+	req, err := NewAPIRequest("PATCH", url, config.APIKey, bytes.NewReader(projectAsJson))
+
+	if err != nil {
+		return err
+	}
+	resp, err := client.Do(req)
+	if err != nil {
+		return err
+	}
+	defer resp.Body.Close()
+	body, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		return err
+	}
+
+	if resp.StatusCode != http.StatusOK {
+		return fmt.Errorf("Server returned non-200 status: %v\n", resp.Status)
+	}
+
+	// if RawFormat flag is set, don't format the output
+	if config.RawFormat {
+		fmt.Printf("%s", body)
+		return nil
+	}
+
+	color.Printf("@gProject %s updated succesfully\n", slug)
+
+	return nil
+}
+
 // Create a new project on gemnasium.
 // The first arg is used as the project name.
 // If no arg is provided, the user will be prompted to enter a project name.
+// http://docs.gemnasium.apiary.io/#post-%2Fprojects
 func CreateProject(projectName string, config *Config, r io.Reader) error {
 	project := &Project{Name: projectName}
 	if project.Name == "" {
@@ -198,6 +247,7 @@ func CreateProject(projectName string, config *Config, r io.Reader) error {
 	return nil
 }
 
+// Create a project config gile (.gemnasium.yml)
 func ConfigureProject(slug string, config *Config, r io.Reader, f *os.File) error {
 
 	if slug == "" {
@@ -224,6 +274,8 @@ func ConfigureProject(slug string, config *Config, r io.Reader, f *os.File) erro
 	return nil
 }
 
+// Push project dependencies
+// Not yet implemented and WIP
 func PushDependencies(ctx *cli.Context, config *Config) error {
 	deps := []DependencyFile{}
 	searchDeps := func(path string, info os.FileInfo, err error) error {
@@ -248,6 +300,8 @@ func PushDependencies(ctx *cli.Context, config *Config) error {
 	return nil
 }
 
+// Start project synchronization
+// http://docs.gemnasium.apiary.io/#post-%2Fprojects%2F%7Bslug%7D%2Fsync
 func SyncProject(projectSlug string, config *Config) error {
 	if projectSlug == "" {
 		return errors.New("[projectSlug] can't be empty")
@@ -271,126 +325,4 @@ func SyncProject(projectSlug string, config *Config) error {
 
 	color.Printf("@gSynchronization started for project %s\n", projectSlug)
 	return nil
-}
-
-func LiveEvaluation(files []string, config *Config) error {
-	// Create an array with files content
-	depFiles := make([]DependencyFile, len(files))
-	for i, file := range files {
-		depFile := DependencyFile{Name: file}
-		content, err := ioutil.ReadFile(file)
-		if err != nil {
-			return err
-		}
-		depFile.Content = content
-		depFiles[i] = depFile
-	}
-
-	requestDeps := map[string][]DependencyFile{"dependency_files": depFiles}
-	depFilesJSON, err := json.Marshal(requestDeps)
-	if err != nil {
-		return err
-	}
-	client := &http.Client{}
-	req, err := http.NewRequest("POST", config.APIEndpoint+LIVE_EVAL_PATH, bytes.NewReader(depFilesJSON))
-	if err != nil {
-		return err
-	}
-	req.SetBasicAuth("x", config.APIKey)
-	req.Header.Add("Content-Type", "application/json")
-	resp, err := client.Do(req)
-	if err != nil {
-		return err
-	}
-	defer resp.Body.Close()
-	body, err := ioutil.ReadAll(resp.Body)
-	if err != nil {
-		return err
-	}
-
-	if resp.StatusCode != http.StatusOK {
-		return fmt.Errorf("Server returned non-200 status: %v\n", resp.Status)
-	}
-
-	// Parse server response
-	var jsonResp map[string]interface{}
-	if err := json.Unmarshal(body, &jsonResp); err != nil {
-		return err
-	}
-
-	// Wait until job is done
-	url := fmt.Sprintf("%s%s/%s", config.APIEndpoint, LIVE_EVAL_PATH, jsonResp["job_id"])
-	req, err = http.NewRequest("GET", url, nil)
-	if err != nil {
-		return err
-	}
-	req.SetBasicAuth("x", config.APIKey)
-	req.Header.Add("Content-Type", "application/json")
-	var response struct {
-		Status string `json:"status"`
-		Result struct {
-			RuntimeStatus     string       `json:"runtime_status"`
-			DevelopmentStatus string       `json:"development_status"`
-			Dependencies      []Dependency `json:"dependencies"`
-		} `json:"result"`
-	}
-	var iter int // used to display the little dots for each loop bellow
-	for {
-		// use the same request again and again
-		resp, err := client.Do(req)
-		if err != nil {
-			return err
-		}
-		defer resp.Body.Close()
-		body, err := ioutil.ReadAll(resp.Body)
-		if err != nil {
-			return err
-		}
-
-		if resp.StatusCode != http.StatusOK {
-			response.Status = "error"
-		}
-
-		if err = json.Unmarshal(body, &response); err != nil {
-			return err
-		}
-
-		if !config.RawFormat { // don't display status if RawFormat
-			iter += 1
-			fmt.Printf("\rJob Status: %s%s", response.Status, strings.Repeat(".", iter))
-		}
-		if response.Status != "working" && response.Status != "queued" { // Job has completed or failed or whatever
-			if config.RawFormat {
-				fmt.Printf("%s\n", body)
-				return nil
-			}
-			break
-		}
-		// Wait 1s before trying again
-		time.Sleep(time.Second * 1)
-	}
-
-	color.Println(fmt.Sprintf("\n\n%-12.12s %s", "Run. Status", statusDots(response.Result.RuntimeStatus)))
-	color.Println(fmt.Sprintf("%-12.12s %s\n\n", "Dev. Status", statusDots(response.Result.DevelopmentStatus)))
-
-	// Display deps in an ascii table
-	renderDepsAsTable(response.Result.Dependencies, os.Stdout)
-	return nil
-}
-
-// Return unicode colorized text dots for each status
-// Status is supposed to red|yellow|green otherwise "none" will be returned
-func statusDots(status string) string {
-	var dots string
-	switch status {
-	case "red":
-		dots = "@k\u2B24 @k\u2B24 @r\u2B24  @{|}(red)"
-	case "yellow":
-		dots = "@k\u2B24 @y\u2B24 @k\u2B24  @{|}(yellow)"
-	case "green":
-		dots = "@g\u2B24 @k\u2B24 @k\u2B24  @{|}(green)"
-	default:
-		dots = "@k\u2B24 @k\u2B24 @k\u2B24  @{|}(none)"
-	}
-	return dots
 }

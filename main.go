@@ -138,12 +138,40 @@ func main() {
 					Name:      "show",
 					ShortName: "s",
 					Usage:     "Show projet detail",
-					Flags: []cli.Flag{
-						cli.StringFlag{"slug", "", "Project slug (unique identifier on Gemnasium)"},
-					},
 					Action: func(ctx *cli.Context) {
 						AttemptLogin(ctx, config)
-						err := GetProject(ctx.Args().First(), config)
+						err := ShowProject(ctx.Args().First(), config)
+						if err != nil {
+							ExitWithError(err)
+						}
+					},
+				},
+				{
+					Name:      "update",
+					ShortName: "u",
+					Flags: []cli.Flag{
+						cli.StringFlag{"name, n", "", "Project name"},
+						cli.StringFlag{"desc, d", "", "A short description"},
+						cli.BoolFlag{"monitored, m", "Whether the project is watched by the user. "},
+					},
+					Usage: "Edit project details",
+					Action: func(ctx *cli.Context) {
+						AttemptLogin(ctx, config)
+						var name, desc *string
+						var monitored *bool
+						if ctx.IsSet("name") {
+							nameString := ctx.String("name")
+							name = &nameString
+						}
+						if ctx.IsSet("desc") {
+							descString := ctx.String("desc")
+							desc = &descString
+						}
+						if ctx.IsSet("monitored") {
+							mon := ctx.Bool("monitored")
+							monitored = &mon
+						}
+						err := UpdateProject(ctx.Args().First(), config, name, desc, monitored)
 						if err != nil {
 							ExitWithError(err)
 						}

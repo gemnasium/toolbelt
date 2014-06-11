@@ -1,15 +1,19 @@
 package main
 
 import (
+	"bytes"
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
+	"io"
 	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
 	"os"
 	"strings"
 	"testing"
+
+	"github.com/wsxiaoys/terminal/color"
 )
 
 func CreateProjectTestServer(t *testing.T, APIKey string) *httptest.Server {
@@ -120,5 +124,45 @@ func TestSyncProject(t *testing.T) {
 	if err != nil {
 		t.Errorf("SyncProject failed with err: %s", err)
 	}
+}
 
+func TestUpdateProject(t *testing.T) {
+	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		r.Header.Set("Content-Type", "application/json")
+		jsonOutput :=
+			`{
+    "slug": "gemnasium/API_project",
+    "name: "API_project",
+    "description": "This is a brief description of a project on Gemnasium"
+    "origin": "github",
+    "private": false,
+    "color": "green",
+    "monitored": true,
+    "unmonitored_reason": ""
+}`
+		fmt.Fprintln(w, jsonOutput)
+	}))
+	defer ts.Close()
+	old := os.Stdout // keep backup of the real stdout
+	r, w, _ := os.Pipe()
+	os.Stdout = w
+	config := &Config{APIEndpoint: ts.URL}
+	var name, desc *string
+	var monitored *bool
+	nameStr := "API_project"
+	name = &nameStr
+	descStr := "A desc"
+	desc = &descStr
+	monitoredBool := false
+	monitored = &monitoredBool
+	UpdateProject("blah", config, name, desc, monitored)
+	w.Close()
+	var buf bytes.Buffer
+	io.Copy(&buf, r)
+	os.Stdout = old // restoring the real stdout
+
+	expectedOutput := color.Sprintf("@gProject %s updated succesfully\n", "blah")
+	if buf.String() != expectedOutput {
+		t.Errorf("Expected ouput:\n%s\n\nGot:\n%s", expectedOutput, buf.String())
+	}
 }

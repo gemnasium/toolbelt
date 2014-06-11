@@ -166,3 +166,20 @@ func NewAPIRequest(method, urlStr, APIKey string, body io.Reader) (*http.Request
 	req.Header.Add("Content-Type", "application/json")
 	return req, nil
 }
+
+// Return unicode colorized text dots for each status
+// Status is supposed to red|yellow|green otherwise "none" will be returned
+func statusDots(status string) string {
+	var dots string
+	switch status {
+	case "red":
+		dots = "@k\u2B24 @k\u2B24 @r\u2B24  @{|}(red)"
+	case "yellow":
+		dots = "@k\u2B24 @y\u2B24 @k\u2B24  @{|}(yellow)"
+	case "green":
+		dots = "@g\u2B24 @k\u2B24 @k\u2B24  @{|}(green)"
+	default:
+		dots = "@k\u2B24 @k\u2B24 @k\u2B24  @{|}(none)"
+	}
+	return dots
+}

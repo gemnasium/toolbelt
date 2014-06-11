@@ -146,6 +146,10 @@ func UpdateProject(slug string, config *Config, name, desc *string, monitored *b
 		return errors.New("[slug] can't be empty")
 	}
 
+	if name == nil && desc == nil && monitored == nil {
+		return errors.New("Please specify at least one thing to update (name, desc, or monitored")
+	}
+
 	update := make(map[string]interface{})
 	if name != nil {
 		update["name"] = *name

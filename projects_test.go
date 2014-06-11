@@ -166,3 +166,11 @@ func TestUpdateProject(t *testing.T) {
 		t.Errorf("Expected ouput:\n%s\n\nGot:\n%s", expectedOutput, buf.String())
 	}
 }
+
+func TestUpdateProjectWithNoParams(t *testing.T) {
+	err := UpdateProject("blah", &Config{}, nil, nil, nil)
+	if err.Error() != "Please specify at least one thing to update (name, desc, or monitored" {
+		t.Errorf("Expected error to be 'Please specify at least one thing to update (name, desc, or monitored', got %s\n", err)
+	}
+
+}

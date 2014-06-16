@@ -221,12 +221,10 @@ func CreateProject(projectName string, config *Config, r io.Reader) error {
 		return err
 	}
 	client := &http.Client{}
-	req, err := http.NewRequest("POST", config.APIEndpoint+CREATE_PROJECT_PATH, bytes.NewReader(projectAsJson))
+	req, err := NewAPIRequest("POST", config.APIEndpoint+CREATE_PROJECT_PATH, config.APIKey, bytes.NewReader(projectAsJson))
 	if err != nil {
 		return err
 	}
-	req.SetBasicAuth("x", config.APIKey)
-	req.Header.Add("Content-Type", "application/json")
 	resp, err := client.Do(req)
 	if err != nil {
 		return err

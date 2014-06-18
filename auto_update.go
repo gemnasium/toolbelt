@@ -73,10 +73,11 @@ func AutoUpdate(projectSlug string, testSuite []string, config *Config) error {
 
 	fmt.Printf("Executing test script: ")
 	start := time.Now()
-	err := exec.Command(testSuite[0], testSuite[1:]...).Run()
+	out, err := exec.Command(testSuite[0], testSuite[1:]...).Output()
 	fmt.Printf("done (%fs)\n", time.Since(start).Seconds())
 	if err != nil {
-		fmt.Println("Aborting, initial test suite run is failing")
+		fmt.Println("Aborting, initial test suite run is failing:")
+		fmt.Printf("%s\n", out)
 		return err
 	}
 
@@ -106,7 +107,7 @@ func AutoUpdate(projectSlug string, testSuite []string, config *Config) error {
 
 		fmt.Printf("Executing test script: ")
 		start := time.Now()
-		err = exec.Command(testSuite[0], testSuite[1:]...).Run()
+		out, err = exec.Command(testSuite[0], testSuite[1:]...).Output()
 		fmt.Printf("done (%fs)\n", time.Since(start).Seconds())
 		if err == nil {
 			// we found a valid candidate, ending.
@@ -117,6 +118,8 @@ func AutoUpdate(projectSlug string, testSuite []string, config *Config) error {
 
 			break
 		}
+		// display cmd output
+		fmt.Printf("%s\n", out)
 		err = pushUpdateSetResult(projectSlug, updateSet.ID, UPDATE_SET_FAIL, config)
 		if err != nil {
 			return err
@@ -205,8 +208,9 @@ func applyUpdateSet(updateSet *UpdateSet) error {
 		parts = append(parts, vu.Package.Name)
 	}
 	fmt.Printf("Executing update commmand: %s\n", strings.Join(parts, " "))
-	err := exec.Command(parts[0], parts[1:]...).Run()
+	out, err := exec.Command(parts[0], parts[1:]...).Output()
 	if err != nil {
+		fmt.Printf("%s\n", out)
 		return err
 	}
 	fmt.Println("Done")

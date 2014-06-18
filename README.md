@@ -1,5 +1,7 @@
 # Gemnasium Toolbelt
 
+[![Build Status](https://travis-ci.org/gemnasium/toolbelt.svg?branch=master)](https://travis-ci.org/gemnasium/toolbelt)
+
 Gemnasium toolbelt is a CLI for the Gemnasium API.
 
 ## How to install it ?

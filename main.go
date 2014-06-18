@@ -301,6 +301,47 @@ func main() {
 				}
 			},
 		},
+		{
+			Name:      "autoupdate",
+			ShortName: "au",
+			Usage:     "Auto-update will test updates in your project, and notify Gemnasium of the result",
+			Description: `Auto-Update will fetch update sets from Gemnasium and run your test suite against them.
+  The test suite can be passed as second argument (first being the project_slug), or through the env var GEMNASIUM_TESTSUITE.
+
+  Arguments:
+
+  - project_slug (string): Project ID on Gemnasium.
+  - [test suite commands] (string):
+
+  Env Vars:
+
+  - GEMNASIUM_TESTSUITE: will be run for each iteration over update sets. This is typically your test suite script.
+  - GEMNASIUM_BUNDLE_INSTALL_CMD: during each iteration, the new bundle will be installed. Default: "bundle install"
+  - GEMNASIUM_BUNDLE_UPDATE_CMD: during each iteration, some gems might be updated. This command will be used. Default: "bundle update"
+  - BRANCH: Current branch can be specified with this var, if the git command fails to run (git rev-parse --abbrev-ref HEAD).
+  - REVISION: Current revision can be specified with this var, if the git command fails to run (git rev-parse --abbrev-ref HEAD)
+
+  Examples:
+
+  - GEMNASIUM_TESTSUITE="bundle exec rake" gemnasium autoupdate your_project_slug
+  - cat script.sh | gemnasium autoupdate your_project_slug
+  - gemnasium autoupdate my_project_slug bundle exec rake
+  `,
+			Action: func(ctx *cli.Context) {
+				AttemptLogin(ctx, config)
+				if !ctx.Args().Present() {
+					cli.ShowCommandHelp(ctx, "autoupdate")
+					os.Exit(1)
+				}
+				projectSlug := ctx.Args().First()
+				testSuite := ctx.Args().Tail()
+				err := AutoUpdate(projectSlug, testSuite, config)
+				if err != nil {
+					printFatal(err.Error())
+					os.Exit(1)
+				}
+			},
+		},
 	}
 
 	app.Run(os.Args)

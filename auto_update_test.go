@@ -29,7 +29,7 @@ func TestFetchUpdateSet(t *testing.T) {
 			},
 		},
 		VersionUpdates: []VersionUpdate{},
-	}t 
+	}
 
 	resultSet, err := fetchUpdateSet("blah", config)
 	if err != nil {
@@ -39,5 +39,3 @@ func TestFetchUpdateSet(t *testing.T) {
 		t.Errorf("Expected resultSet to be:\n%#v\nGot:\n%#v\n", expectedUpdateSet, resultSet)
 	}
 }
-
-

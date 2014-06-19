@@ -8,11 +8,9 @@ These functions are meant to be used during CI tests.
 
 import (
 	"bytes"
-	"crypto/sha1"
 	"encoding/json"
 	"errors"
 	"fmt"
-	"io"
 	"io/ioutil"
 	"net/http"
 	"os"
@@ -20,8 +18,6 @@ import (
 	"path"
 	"strings"
 	"time"
-
-	"github.com/sergi/go-diff/diffmatchpatch"
 )
 
 const (
@@ -38,13 +34,8 @@ const (
 )
 
 type RequirementUpdate struct {
-	File  RequirementFile `json:"file"`
-	Patch string          `json:"patch"`
-}
-
-type RequirementFile struct {
-	Path string `json:"path"`
-	SHA1 string `json:"sha1"`
+	File  DependencyFile `json:"file"`
+	Patch string         `json:"patch"`
 }
 
 type VersionUpdate struct {
@@ -57,6 +48,13 @@ type UpdateSet struct {
 	ID                 int                 `json:"id"`
 	RequirementUpdates []RequirementUpdate `json:"requirement_updates"`
 	VersionUpdates     []VersionUpdate     `json:"version_updates"`
+}
+
+type UpdateSetResult struct {
+	UpdateSetID     int              `json:"-"`
+	ProjectSlug     string           `json:"-"`
+	Status          string           `json:"status"`
+	DependencyFiles []DependencyFile `json:"dependency_files"`
 }
 
 // Download and loop over update sets, apply changes, run test suite, and finally notify gemnasium
@@ -72,9 +70,7 @@ func AutoUpdate(projectSlug string, testSuite []string, config *Config) error {
 	}
 
 	fmt.Printf("Executing test script: ")
-	start := time.Now()
-	out, err := exec.Command(testSuite[0], testSuite[1:]...).Output()
-	fmt.Printf("done (%fs)\n", time.Since(start).Seconds())
+	out, err := executeTestSuite(testSuite)
 	if err != nil {
 		fmt.Println("Aborting, initial test suite run is failing:")
 		fmt.Printf("%s\n", out)
@@ -97,33 +93,38 @@ func AutoUpdate(projectSlug string, testSuite []string, config *Config) error {
 			fmt.Println("Job done!")
 			break
 		}
-		fmt.Printf("========= [UpdateSet #%d] =========\n", updateSet.ID)
+		fmt.Printf("\n========= [UpdateSet #%d] =========\n", updateSet.ID)
 
 		// We have an updateSet, let's patch files and run tests
-		err = applyUpdateSet(updateSet)
+		// We need to keep a list of updated files to restore them after this run
+		orgDepFiles, uptDepFiles, err := applyUpdateSet(updateSet)
 		if err != nil {
 			return err
 		}
 
-		fmt.Printf("Executing test script: ")
-		start := time.Now()
-		out, err = exec.Command(testSuite[0], testSuite[1:]...).Output()
-		fmt.Printf("done (%fs)\n", time.Since(start).Seconds())
+		out, err := executeTestSuite(testSuite)
+		resultSet := &UpdateSetResult{UpdateSetID: updateSet.ID, ProjectSlug: projectSlug, DependencyFiles: uptDepFiles}
 		if err == nil {
 			// we found a valid candidate, ending.
-			err := pushUpdateSetResult(projectSlug, updateSet.ID, UPDATE_SET_SUCCESS, config)
+			resultSet.Status = UPDATE_SET_SUCCESS
+			err := pushUpdateSetResult(resultSet, config)
 			if err != nil {
 				return err
 			}
-
 			break
 		}
 		// display cmd output
 		fmt.Printf("%s\n", out)
-		err = pushUpdateSetResult(projectSlug, updateSet.ID, UPDATE_SET_FAIL, config)
+		resultSet.Status = UPDATE_SET_FAIL
+		err = pushUpdateSetResult(resultSet, config)
 		if err != nil {
 			return err
 		}
+		err = restoreDepFiles(orgDepFiles)
+		if err != nil {
+			return err
+		}
+
 		// Let's continue with another set
 	}
 	return nil
@@ -174,15 +175,26 @@ func fetchUpdateSet(projectSlug string, config *Config) (*UpdateSet, error) {
 }
 
 // Patch files if needed, and update packages
-func applyUpdateSet(updateSet *UpdateSet) error {
-	for _, ru := range updateSet.RequirementUpdates {
+// Will return a slice of original files and a slice of the updated files, with
+// their content
+func applyUpdateSet(updateSet *UpdateSet) (orgDepFiles, uptDepFiles []DependencyFile, err error) {
+	orgDepFiles = make([]DependencyFile, len(updateSet.RequirementUpdates))
+	uptDepFiles = make([]DependencyFile, len(updateSet.RequirementUpdates))
+	for i, ru := range updateSet.RequirementUpdates {
 		f := ru.File
-		err := checkFileSHA1(f.Path, f.SHA1)
+		err = f.CheckFileSHA1()
 		if err != nil {
-			return err
+			return orgDepFiles, uptDepFiles, err
 		}
+		// fetch file content
+		f.Update()
+		orgDepFiles[i] = f
 		fmt.Println("Patching", f.Path)
-		patchFile(f.Path, ru.Patch)
+		err := f.Patch(ru.Patch)
+		if err != nil {
+			return orgDepFiles, uptDepFiles, err
+		}
+		uptDepFiles[i] = f
 		// TODO: Make this command generic
 		bi := BUNDLE_INSTALL_CMD
 		if biCMDEnv := os.Getenv(ENV_GEMNASIUM_BUNDLE_INSTALL_CMD); biCMDEnv != "" {
@@ -191,9 +203,10 @@ func applyUpdateSet(updateSet *UpdateSet) error {
 		parts := strings.Fields(bi)
 		cmd := exec.Command(parts[0], parts[1:]...)
 		cmd.Dir = path.Dir("f.Path")
-		err = cmd.Run()
+		out, err := cmd.Output()
 		if err != nil {
-			return err
+			fmt.Printf("Error while installing packages: %s", string(out))
+			return orgDepFiles, uptDepFiles, err
 		}
 	}
 
@@ -211,23 +224,24 @@ func applyUpdateSet(updateSet *UpdateSet) error {
 	out, err := exec.Command(parts[0], parts[1:]...).Output()
 	if err != nil {
 		fmt.Printf("%s\n", out)
-		return err
+		return orgDepFiles, uptDepFiles, err
 	}
+	uptDepFiles = append(uptDepFiles, *NewDependencyFile("Gemfile.lock"))
+
 	fmt.Println("Done")
-	return nil
+	return orgDepFiles, uptDepFiles, nil
 }
 
 // Once update set has been tested, we must send the result to Gemnasium,
 // in order to update statitics.
-func pushUpdateSetResult(projectSlug string, updateSetID int, status string, config *Config) error {
-	fmt.Printf("Pushing result (status='%s'): ", status)
-	if updateSetID == 0 || status == "" {
+func pushUpdateSetResult(rs *UpdateSetResult, config *Config) error {
+	fmt.Printf("Pushing result (status='%s'): ", rs.Status)
+	if rs.UpdateSetID == 0 || rs.Status == "" {
 		return errors.New("Missing updateSet ID and/or status args")
 	}
 	client := &http.Client{}
-	url := fmt.Sprintf("%s/projects/%s/branches/%s/update_sets/%d", config.APIEndpoint, projectSlug, getCurrentBranch(), updateSetID)
-	update := &map[string]string{"state": status}
-	updateJSON, err := json.Marshal(update)
+	url := fmt.Sprintf("%s/projects/%s/branches/%s/update_sets/%d", config.APIEndpoint, rs.ProjectSlug, getCurrentBranch(), rs.UpdateSetID)
+	updateJSON, err := json.Marshal(rs)
 	if err != nil {
 		return err
 	}
@@ -247,24 +261,6 @@ func pushUpdateSetResult(projectSlug string, updateSetID int, status string, con
 		return fmt.Errorf("Server returned non-200 status: %v\n", resp.Status)
 	}
 	fmt.Printf("done\n")
-	return nil
-}
-
-func checkFileSHA1(filePath, fileSHA1 string) error {
-	dat, err := ioutil.ReadFile(filePath)
-	if err != nil {
-		return err
-	}
-	h := sha1.New()
-	header := fmt.Sprintf("blob %d\x00", len(dat))
-	io.WriteString(h, header)
-	io.Copy(h, bytes.NewReader(dat))
-	hash := h.Sum(nil)
-
-	sum := fmt.Sprintf("%x", hash)
-	if sum != fileSHA1 {
-		return fmt.Errorf("%s: File signature doesn't match (expected: %s, got: %s)", filePath, fileSHA1, sum)
-	}
 	return nil
 }
 
@@ -300,30 +296,53 @@ func gitPath() string {
 	return path
 }
 
-// Apply patch to a file.
-// The file will be opened, updated, and written
-func patchFile(filePath, patch string) error {
-	dmp := diffmatchpatch.New()
-	patches, err := dmp.PatchFromText(patch)
-	if err != nil {
-		return err
-	}
-	dat, err := ioutil.ReadFile(filePath)
-	if err != nil {
-		return err
-	}
-
-	var patchesApplied []bool
-	patchedDat, patchesApplied := dmp.PatchApply(patches, string(dat))
-	for i, applied := range patchesApplied {
-		if !applied {
-			return fmt.Errorf("Patching failed: %s", patches[i])
+// Restore original files.
+// Needed after each run
+func restoreDepFiles(dfiles []DependencyFile) error {
+	fmt.Printf("%d file(s) to be restored.\n", len(dfiles))
+	for _, df := range dfiles {
+		fmt.Printf("Restoring file %s: ", df.Path)
+		err := ioutil.WriteFile(df.Path, df.Content, 0644)
+		if err != nil {
+			return err
 		}
-	}
-	fmt.Printf("%d patches applied\n", len(patchesApplied))
-	err = ioutil.WriteFile(filePath, []byte(patchedDat), 0644)
-	if err != nil {
-		return err
+		fmt.Printf("done\n")
 	}
 	return nil
+}
+
+func executeTestSuite(ts []string) ([]byte, error) {
+	done := make(chan struct {
+		Output []byte
+		Err    error
+	})
+	defer close(done)
+	var out []byte
+	var err error
+	fmt.Printf("Executing test script")
+	start := time.Now()
+	go func() {
+		result, err := exec.Command(ts[0], ts[1:]...).Output()
+		done <- struct {
+			Output []byte
+			Err    error
+		}{result, err}
+	}()
+	var stop bool
+	for {
+		select {
+		case result := <-done:
+			stop = true
+			out = result.Output
+			err = result.Err
+		default:
+			fmt.Print(".")
+			time.Sleep(1 * time.Second)
+		}
+		if stop {
+			break
+		}
+	}
+	fmt.Printf("done (%fs)\n", time.Since(start).Seconds())
+	return out, err
 }

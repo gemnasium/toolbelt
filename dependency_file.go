@@ -60,12 +60,33 @@ func (df *DependencyFile) Update() error {
 // Apply patch to the file referenced by Path
 // If Content is empty, the file content is read from the file directly
 func (df *DependencyFile) Patch(patch string) error {
+	fmt.Printf("patch %s\n", patch)
 	patchPath, err := exec.LookPath("patch")
 	if err != nil {
 		return err
 	}
 
-	out, err := exec.Command(patchPath, df.Path).Output()
+	cmd := exec.Command(patchPath, df.Path)
+	stdin, err := cmd.StdinPipe()
+	if err != nil {
+		return err
+	}
+	stdout, err := cmd.StdoutPipe()
+	if err != nil {
+		return err
+	}
+	err = cmd.Start()
+	if err != nil {
+		return err
+	}
+
+	_, err = io.WriteString(stdin, patch)
+	if err != nil {
+		return err
+	}
+
+	err = stdin.Close()
+	out, err := ioutil.ReadAll(stdout)
 	if err != nil {
 		fmt.Println(string(out))
 		return err

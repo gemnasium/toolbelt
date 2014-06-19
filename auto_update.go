@@ -53,7 +53,7 @@ type UpdateSet struct {
 type UpdateSetResult struct {
 	UpdateSetID     int              `json:"-"`
 	ProjectSlug     string           `json:"-"`
-	Status          string           `json:"status"`
+	State           string           `json:"state"`
 	DependencyFiles []DependencyFile `json:"dependency_files"`
 }
 
@@ -106,7 +106,7 @@ func AutoUpdate(projectSlug string, testSuite []string, config *Config) error {
 		resultSet := &UpdateSetResult{UpdateSetID: updateSet.ID, ProjectSlug: projectSlug, DependencyFiles: uptDepFiles}
 		if err == nil {
 			// we found a valid candidate, ending.
-			resultSet.Status = UPDATE_SET_SUCCESS
+			resultSet.State = UPDATE_SET_SUCCESS
 			err := pushUpdateSetResult(resultSet, config)
 			if err != nil {
 				return err
@@ -115,7 +115,7 @@ func AutoUpdate(projectSlug string, testSuite []string, config *Config) error {
 		}
 		// display cmd output
 		fmt.Printf("%s\n", out)
-		resultSet.Status = UPDATE_SET_FAIL
+		resultSet.State = UPDATE_SET_FAIL
 		err = pushUpdateSetResult(resultSet, config)
 		if err != nil {
 			return err
@@ -238,9 +238,9 @@ func applyUpdateSet(updateSet *UpdateSet) (orgDepFiles, uptDepFiles []Dependency
 // Once update set has been tested, we must send the result to Gemnasium,
 // in order to update statitics.
 func pushUpdateSetResult(rs *UpdateSetResult, config *Config) error {
-	fmt.Printf("Pushing result (status='%s'): ", rs.Status)
-	if rs.UpdateSetID == 0 || rs.Status == "" {
-		return errors.New("Missing updateSet ID and/or status args")
+	fmt.Printf("Pushing result (status='%s'): ", rs.State)
+	if rs.UpdateSetID == 0 || rs.State == "" {
+		return errors.New("Missing updateSet ID and/or State args")
 	}
 	client := &http.Client{}
 	url := fmt.Sprintf("%s/projects/%s/branches/%s/update_sets/%d", config.APIEndpoint, rs.ProjectSlug, getCurrentBranch(), rs.UpdateSetID)
@@ -315,10 +315,11 @@ func restoreDepFiles(dfiles []DependencyFile) error {
 }
 
 func executeTestSuite(ts []string) ([]byte, error) {
-	done := make(chan struct {
+	type Result struct {
 		Output []byte
 		Err    error
-	})
+	}
+	done := make(chan Result)
 	defer close(done)
 	var out []byte
 	var err error
@@ -326,10 +327,7 @@ func executeTestSuite(ts []string) ([]byte, error) {
 	start := time.Now()
 	go func() {
 		result, err := exec.Command(ts[0], ts[1:]...).Output()
-		done <- struct {
-			Output []byte
-			Err    error
-		}{result, err}
+		done <- Result{result, err}
 	}()
 	var stop bool
 	for {

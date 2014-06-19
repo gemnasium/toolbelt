@@ -295,7 +295,7 @@ func PushDependencies(ctx *cli.Context, config *Config) error {
 
 		if matched {
 			fmt.Printf("[debug] Found: %s\n", info.Name())
-			deps = append(deps, DependencyFile{Name: info.Name(), SHA: "sha", Content: []byte("content")})
+			deps = append(deps, DependencyFile{Path: info.Name(), SHA: "sha", Content: []byte("content")})
 		}
 		return nil
 	}

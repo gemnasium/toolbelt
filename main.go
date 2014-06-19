@@ -58,7 +58,7 @@ type Dependency struct {
 }
 
 type DependencyFile struct {
-	Name    string `json:"name"`
+	Path    string `json:"path"`
 	SHA     string `json:"sha,omitempty"`
 	Content []byte `json:"content"`
 }

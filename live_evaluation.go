@@ -21,7 +21,7 @@ func LiveEvaluation(files []string, config *Config) error {
 	// Create an array with files content
 	depFiles := make([]DependencyFile, len(files))
 	for i, file := range files {
-		depFile := DependencyFile{Name: file}
+		depFile := DependencyFile{Path: file}
 		content, err := ioutil.ReadFile(file)
 		if err != nil {
 			return err

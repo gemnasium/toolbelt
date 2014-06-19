@@ -180,6 +180,7 @@ func fetchUpdateSet(projectSlug string, config *Config) (*UpdateSet, error) {
 func applyUpdateSet(updateSet *UpdateSet) (orgDepFiles, uptDepFiles []DependencyFile, err error) {
 	orgDepFiles = make([]DependencyFile, len(updateSet.RequirementUpdates))
 	uptDepFiles = make([]DependencyFile, len(updateSet.RequirementUpdates))
+	GemfileLock := NewDependencyFile("Gemfile.lock")
 	for i, ru := range updateSet.RequirementUpdates {
 		f := ru.File
 		err = f.CheckFileSHA1()
@@ -226,7 +227,9 @@ func applyUpdateSet(updateSet *UpdateSet) (orgDepFiles, uptDepFiles []Dependency
 		fmt.Printf("%s\n", out)
 		return orgDepFiles, uptDepFiles, err
 	}
-	uptDepFiles = append(uptDepFiles, *NewDependencyFile("Gemfile.lock"))
+	orgDepFiles = append(orgDepFiles, *GemfileLock)
+	GemfileLock.Update()
+	uptDepFiles = append(uptDepFiles, *GemfileLock)
 
 	fmt.Println("Done")
 	return orgDepFiles, uptDepFiles, nil

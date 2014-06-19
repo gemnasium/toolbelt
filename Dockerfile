@@ -1,4 +1,4 @@
-FROM docker:5000/go:1.2.1
+FROM docker:5000/go:1.3
 
 ADD . /go/src/git.tech-angels.net/gemnasium/toolbelt
 # Fetch deps

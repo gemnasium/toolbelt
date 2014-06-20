@@ -57,12 +57,6 @@ type Dependency struct {
 	Advisories    []Advisory
 }
 
-type DependencyFile struct {
-	Path    string `json:"path"`
-	SHA     string `json:"sha,omitempty"`
-	Content []byte `json:"content"`
-}
-
 func main() {
 	app := cli.NewApp()
 	app.Name = "gemnasium"

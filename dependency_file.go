@@ -9,6 +9,12 @@ import (
 	"os/exec"
 )
 
+type DependencyFile struct {
+	Path    string `json:"path"`
+	SHA     string `json:"sha,omitempty"`
+	Content []byte `json:"content"`
+}
+
 func NewDependencyFile(filePath string) *DependencyFile {
 	content, err := ioutil.ReadFile(filePath)
 	if err != nil {
@@ -60,7 +66,6 @@ func (df *DependencyFile) Update() error {
 // Apply patch to the file referenced by Path
 // If Content is empty, the file content is read from the file directly
 func (df *DependencyFile) Patch(patch string) error {
-	fmt.Printf("patch %s\n", patch)
 	patchPath, err := exec.LookPath("patch")
 	if err != nil {
 		return err
@@ -75,8 +80,7 @@ func (df *DependencyFile) Patch(patch string) error {
 	if err != nil {
 		return err
 	}
-	err = cmd.Start()
-	if err != nil {
+	if err = cmd.Start(); err != nil {
 		return err
 	}
 
@@ -84,10 +88,13 @@ func (df *DependencyFile) Patch(patch string) error {
 	if err != nil {
 		return err
 	}
+	stdin.Close()
 
-	err = stdin.Close()
 	out, err := ioutil.ReadAll(stdout)
 	if err != nil {
+		return err
+	}
+	if err = cmd.Wait(); err != nil {
 		fmt.Println(string(out))
 		return err
 	}

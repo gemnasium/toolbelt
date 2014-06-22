@@ -15,22 +15,18 @@ import (
 	"net/http"
 	"os"
 	"os/exec"
-	"path"
 	"strings"
 	"time"
 )
 
 const (
-	ENV_GEMNASIUM_TESTSUITE          = "GEMNASIUM_TESTSUITE"
-	ENV_GEMNASIUM_BUNDLE_UPDATE_CMD  = "GEMNASIUM_BUNDLE_UPDATE_CMD"
-	ENV_GEMNASIUM_BUNDLE_INSTALL_CMD = "GEMNASIUM_BUNDLE_INSTALL_CMD"
-	ENV_BRANCH                       = "BRANCH"
-	ENV_REVISION                     = "REVISION"
-	AUTOUPDATE_MAX_DURATION          = 1800
-	BUNDLE_INSTALL_CMD               = "bundle install"
-	BUNDLE_UPDATE_CMD                = "bundle update"
-	UPDATE_SET_SUCCESS               = "succeeded"
-	UPDATE_SET_FAIL                  = "failed"
+	ENV_GEMNASIUM_TESTSUITE = "GEMNASIUM_TESTSUITE"
+	ENV_BRANCH              = "BRANCH"
+	ENV_REVISION            = "REVISION"
+	AUTOUPDATE_MAX_DURATION = 1800
+	UPDATE_SET_INVALID      = "invalid"
+	UPDATE_SET_SUCCESS      = "test_passed"
+	UPDATE_SET_FAIL         = "test_failed"
 )
 
 type RequirementUpdate struct {
@@ -45,9 +41,9 @@ type VersionUpdate struct {
 }
 
 type UpdateSet struct {
-	ID                 int                 `json:"id"`
-	RequirementUpdates []RequirementUpdate `json:"requirement_updates"`
-	VersionUpdates     []VersionUpdate     `json:"version_updates"`
+	ID                 int                            `json:"id"`
+	RequirementUpdates map[string][]RequirementUpdate `json:"requirement_updates"`
+	VersionUpdates     map[string][]VersionUpdate     `json:"version_updates"`
 }
 
 type UpdateSetResult struct {
@@ -98,12 +94,27 @@ func AutoUpdate(projectSlug string, testSuite []string, config *Config) error {
 		// We have an updateSet, let's patch files and run tests
 		// We need to keep a list of updated files to restore them after this run
 		orgDepFiles, uptDepFiles, err := applyUpdateSet(updateSet)
+		resultSet := &UpdateSetResult{UpdateSetID: updateSet.ID, ProjectSlug: projectSlug, DependencyFiles: uptDepFiles}
+		if err == cantInstallRequirements {
+			resultSet.State = UPDATE_SET_INVALID
+			err := pushUpdateSetResult(resultSet, config)
+			if err != nil {
+				return err
+			}
+
+			err = restoreDepFiles(orgDepFiles)
+			if err != nil {
+				return err
+			}
+
+			// No need to try the update, it will fail
+			continue
+		}
 		if err != nil {
 			return err
 		}
 
 		out, err := executeTestSuite(testSuite)
-		resultSet := &UpdateSetResult{UpdateSetID: updateSet.ID, ProjectSlug: projectSlug, DependencyFiles: uptDepFiles}
 		if err == nil {
 			// we found a valid candidate, ending.
 			resultSet.State = UPDATE_SET_SUCCESS
@@ -130,7 +141,6 @@ func AutoUpdate(projectSlug string, testSuite []string, config *Config) error {
 	return nil
 }
 
-// Fetch an update set and apply it
 func fetchUpdateSet(projectSlug string, config *Config) (*UpdateSet, error) {
 	client := &http.Client{}
 	url := fmt.Sprintf("%s/projects/%s/branches/%s/update_sets/next", config.APIEndpoint, projectSlug, getCurrentBranch())
@@ -178,59 +188,22 @@ func fetchUpdateSet(projectSlug string, config *Config) (*UpdateSet, error) {
 // Will return a slice of original files and a slice of the updated files, with
 // their content
 func applyUpdateSet(updateSet *UpdateSet) (orgDepFiles, uptDepFiles []DependencyFile, err error) {
-	orgDepFiles = make([]DependencyFile, len(updateSet.RequirementUpdates))
-	uptDepFiles = make([]DependencyFile, len(updateSet.RequirementUpdates))
-	GemfileLock := NewDependencyFile("Gemfile.lock")
-	for i, ru := range updateSet.RequirementUpdates {
-		f := ru.File
-		err = f.CheckFileSHA1()
+	for packageType, reqUpdates := range updateSet.RequirementUpdates {
+		installer := NewRequirementsInstaller(packageType)
+		err = installer(reqUpdates, &orgDepFiles, &uptDepFiles)
 		if err != nil {
-			return orgDepFiles, uptDepFiles, err
-		}
-		// fetch file content
-		f.Update()
-		orgDepFiles[i] = f
-		fmt.Println("Patching", f.Path)
-		err := f.Patch(ru.Patch)
-		if err != nil {
-			return orgDepFiles, uptDepFiles, err
-		}
-		uptDepFiles[i] = f
-		// TODO: Make this command generic
-		bi := BUNDLE_INSTALL_CMD
-		if biCMDEnv := os.Getenv(ENV_GEMNASIUM_BUNDLE_INSTALL_CMD); biCMDEnv != "" {
-			bi = biCMDEnv
-		}
-		parts := strings.Fields(bi)
-		cmd := exec.Command(parts[0], parts[1:]...)
-		cmd.Dir = path.Dir("f.Path")
-		out, err := cmd.Output()
-		if err != nil {
-			fmt.Printf("Error while installing packages: %s", string(out))
 			return orgDepFiles, uptDepFiles, err
 		}
 	}
 
-	upt := BUNDLE_UPDATE_CMD
-	if uptEnv := os.Getenv(ENV_GEMNASIUM_BUNDLE_UPDATE_CMD); uptEnv != "" {
-		upt = uptEnv
+	for packageType, versionUpdates := range updateSet.VersionUpdates {
+		// Update Versions
+		updater := NewUpdater(packageType)
+		err = updater(versionUpdates, &orgDepFiles, &uptDepFiles)
+		if err != nil {
+			return orgDepFiles, uptDepFiles, err
+		}
 	}
-	parts := strings.Fields(upt)
-	for _, vu := range updateSet.VersionUpdates {
-		// TODO: run bundle update here
-		fmt.Printf("Updating dependency %s (%s => %s)\n", vu.Package.Name, vu.OldVersion, vu.TargetVersion)
-		parts = append(parts, vu.Package.Name)
-	}
-	fmt.Printf("Executing update commmand: %s\n", strings.Join(parts, " "))
-	out, err := exec.Command(parts[0], parts[1:]...).Output()
-	if err != nil {
-		fmt.Printf("%s\n", out)
-		return orgDepFiles, uptDepFiles, err
-	}
-	orgDepFiles = append(orgDepFiles, *GemfileLock)
-	GemfileLock.Update()
-	uptDepFiles = append(uptDepFiles, *GemfileLock)
-
 	fmt.Println("Done")
 	return orgDepFiles, uptDepFiles, nil
 }

@@ -2,8 +2,12 @@ package main
 
 import (
 	"bytes"
+	"encoding/base64"
 	"fmt"
+	"io"
 	"io/ioutil"
+	"net/http"
+	"net/http/httptest"
 	"os"
 	"testing"
 )
@@ -138,5 +142,92 @@ func TestGetFileSHA1(t *testing.T) {
 
 	if tf.SHA != sha {
 		t.Errorf("GetFileSHA1 error. Exp: %s, Got: %s", tf.SHA, sha)
+	}
+}
+
+func TestListDependencyFiles(t *testing.T) {
+	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		r.Header.Set("Content-Type", "application/json")
+		jsonOutput :=
+			fmt.Sprintf(`[
+			{ "id": "1", "path": "Gemfile", "content": "%s", "sha": "Gemfile SHA-1" },
+			{ "id": "2", "path": "Gemfile.lock", "content": "%s", "sha": "Gemfile.lock SHA-1" }
+			]`,
+				base64.StdEncoding.EncodeToString([]byte("Gemfile base64 encoded content")),
+				base64.StdEncoding.EncodeToString([]byte("Gemfile.lock base64 encoded content")))
+		fmt.Fprintln(w, jsonOutput)
+	}))
+	defer ts.Close()
+	old := os.Stdout // keep backup of the real stdout
+	r, w, _ := os.Pipe()
+	os.Stdout = w
+	config := &Config{APIEndpoint: ts.URL}
+	err := ListDependencyFiles("blah", config)
+	if err != nil {
+		t.Error(err)
+	}
+
+	w.Close()
+	var buf bytes.Buffer
+	io.Copy(&buf, r)
+	os.Stdout = old // restoring the real stdout
+
+	expectedOutput := "+--------------+--------------------+\n"
+	expectedOutput += "|     PATH     |        SHA         |\n"
+	expectedOutput += "+--------------+--------------------+\n"
+	expectedOutput += "| Gemfile      | Gemfile SHA-1      |\n"
+	expectedOutput += "| Gemfile.lock | Gemfile.lock SHA-1 |\n"
+	expectedOutput += "+--------------+--------------------+\n"
+	if buf.String() != expectedOutput {
+		t.Errorf("Expected ouput:\n%s\n\nGot:\n%s", expectedOutput, buf.String())
+	}
+}
+
+func TestPushDependencyFiles(t *testing.T) {
+	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		r.Header.Set("Content-Type", "application/json")
+		jsonOutput :=
+			fmt.Sprintf(`{
+					"added": [{ "id": "1", "path": "Gemfile", "content": "%s", "sha": "Gemfile SHA-1"},
+						{ "id": "2", "path": "Gemfile.lock", "content": "%s", "sha": "Gemfile.lock SHA-1"}],
+					"updated": [],
+					"unchanged": [{ "id": "3", "path": "js/package.json", "content": "%s", "sha": "package.sjon SHA-1"}],
+					"unsupported": []
+			}`,
+				base64.StdEncoding.EncodeToString([]byte("Gemfile base64 encoded content")),
+				base64.StdEncoding.EncodeToString([]byte("Gemfile.lock base64 encoded content")),
+				base64.StdEncoding.EncodeToString([]byte("package.json content")))
+		fmt.Fprintln(w, jsonOutput)
+	}))
+	defer ts.Close()
+	old := os.Stdout // keep backup of the real stdout
+	r, w, _ := os.Pipe()
+	os.Stdout = w
+	config := &Config{APIEndpoint: ts.URL}
+
+	getLocalDependencyFiles = func() ([]DependencyFile, error) {
+		return []DependencyFile{
+			DependencyFile{Path: "Gemfile", SHA: "Gemfile SHA-1", Content: []byte("Gemfile.lock base64 encoded content")},
+			DependencyFile{Path: "Gemfile.lock", SHA: "Gemfile.lock SHA-1", Content: []byte("Gemfile base64 encoded content")},
+			DependencyFile{Path: "js/package.json", SHA: "package.json SHA-1", Content: []byte("package.json content")},
+		}, nil
+	}
+
+	err := PushDependencyFiles("blah", config)
+	if err != nil {
+		t.Error(err)
+	}
+
+	w.Close()
+	var buf bytes.Buffer
+	io.Copy(&buf, r)
+	os.Stdout = old // restoring the real stdout
+
+	expectedOutput := "Added: Gemfile, Gemfile.lock\n"
+	expectedOutput += "Updated: \n"
+	expectedOutput += "Unchanged: js/package.json\n"
+	expectedOutput += "Unsupported: \n"
+	if buf.String() != expectedOutput {
+		t.Errorf("Expected ouput:\n%s\n\nGot:\n%s", expectedOutput, buf.String())
 	}
 }

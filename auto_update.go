@@ -59,7 +59,7 @@ func AutoUpdate(projectSlug string, testSuite []string, config *Config) error {
 		return errors.New("Arg [projectSlug] can't be empty")
 	}
 	if envTS := os.Getenv(ENV_GEMNASIUM_TESTSUITE); envTS != "" {
-		testSuite = []string{os.Getenv(ENV_GEMNASIUM_TESTSUITE)}
+		testSuite = strings.Fields(os.Getenv(ENV_GEMNASIUM_TESTSUITE))
 	}
 	if len(testSuite) == 0 {
 		return errors.New("Arg [testSuite] can't be empty")

@@ -1,9 +1,11 @@
 package main
 
 import (
+	"errors"
 	"fmt"
 	"os"
 	"os/exec"
+	"regexp"
 	"strings"
 )
 
@@ -11,6 +13,8 @@ const (
 	BUNDLE_UPDATE_CMD               = "bundle update"
 	ENV_GEMNASIUM_BUNDLE_UPDATE_CMD = "GEMNASIUM_BUNDLE_UPDATE_CMD"
 )
+
+var cantUpdateVersions = errors.New("Can't update versions")
 
 // Func template for updaters Update Funcs take an UpdateSet, and a ref on the
 // list of original and updated files. Original files are to be restored, while
@@ -21,7 +25,7 @@ const (
 type UpdateFunc func([]VersionUpdate, *[]DependencyFile, *[]DependencyFile) error
 
 var updaters = map[string]UpdateFunc{
-	"rubygems": RubygemsUpdater,
+	"Rubygem": RubygemsUpdater,
 }
 
 func NewUpdater(packageType string) UpdateFunc {
@@ -45,6 +49,12 @@ func RubygemsUpdater(versionUpdates []VersionUpdate, orgDepFiles, uptDepFiles *[
 	fmt.Printf("Executing update commmand: %s\n", strings.Join(parts, " "))
 	out, err := exec.Command(parts[0], parts[1:]...).Output()
 	if err != nil {
+		couldNotFindCompatibleVersion := regexp.MustCompile("(?m)^Bundler could not find compatible versions for gem")
+		if couldNotFindCompatibleVersion.MatchString(string(out)) {
+			// We have an invalid updateSet, and must notify Gemnasium about it
+			return cantUpdateVersions
+		}
+
 		fmt.Printf("%s\n", out)
 		return err
 	}

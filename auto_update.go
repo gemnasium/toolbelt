@@ -95,7 +95,7 @@ func AutoUpdate(projectSlug string, testSuite []string, config *Config) error {
 		// We need to keep a list of updated files to restore them after this run
 		orgDepFiles, uptDepFiles, err := applyUpdateSet(updateSet)
 		resultSet := &UpdateSetResult{UpdateSetID: updateSet.ID, ProjectSlug: projectSlug, DependencyFiles: uptDepFiles}
-		if err == cantInstallRequirements {
+		if err == cantInstallRequirements || err == cantUpdateVersions {
 			resultSet.State = UPDATE_SET_INVALID
 			err := pushUpdateSetResult(resultSet, config)
 			if err != nil {

@@ -18,10 +18,9 @@ import (
 )
 
 const (
-	LIST_PROJECTS_PATH         = "/projects"
-	CREATE_PROJECT_PATH        = "/projects"
-	LIVE_EVAL_PATH             = "/evaluate"
-	SUPPORTED_DEPENDENCY_FILES = `(Gemfile|Gemfile\.lock|.*\.gemspec|package\.json|npm-shrinkwrap\.json|setup\.py|requirements\.txt|requires\.txt|composer\.json|composer\.lock)$`
+	LIST_PROJECTS_PATH  = "/projects"
+	CREATE_PROJECT_PATH = "/projects"
+	LIVE_EVAL_PATH      = "/evaluate"
 )
 
 // List projects on gemnasium

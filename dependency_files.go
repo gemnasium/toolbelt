@@ -18,6 +18,10 @@ import (
 	"github.com/olekukonko/tablewriter"
 )
 
+const (
+	SUPPORTED_DEPENDENCY_FILES = `(Gemfile|Gemfile\.lock|.*\.gemspec|package\.json|npm-shrinkwrap\.json|setup\.py|requirements\.txt|requires\.txt|composer\.json|composer\.lock|bower\.json)$`
+)
+
 type DependencyFile struct {
 	Path    string `json:"path"`
 	SHA     string `json:"sha,omitempty"`
@@ -210,7 +214,7 @@ var getLocalDependencyFiles = func() ([]DependencyFile, error) {
 }
 
 // Push project dependencies
-// Not yet implemented and WIP
+// The current path will be scanned for supported dependency files (SUPPORTED_DEPENDENCY_FILES)
 func PushDependencyFiles(projectSlug string, config *Config) error {
 	dfiles, err := getLocalDependencyFiles()
 	if err != nil {

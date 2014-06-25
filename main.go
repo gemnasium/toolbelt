@@ -245,11 +245,27 @@ func main() {
 			Usage:     "Dependency files",
 			Subcommands: []cli.Command{
 				{
+					Name:      "list",
+					ShortName: "l",
+					Usage:     "List dependency files for project",
+					Action: func(ctx *cli.Context) {
+						AttemptLogin(ctx, config)
+						projectSlug := ctx.Args().First()
+						err := ListDependencyFiles(projectSlug, config)
+						if err != nil {
+							fmt.Println(err)
+							os.Exit(1)
+						}
+					},
+				},
+				{
 					Name:      "push",
 					ShortName: "p",
-					Usage:     "Push dependencies files on Gemnasium",
+					Usage:     "Push dependency files on Gemnasium",
 					Action: func(ctx *cli.Context) {
-						err := PushDependencies(ctx, config)
+						AttemptLogin(ctx, config)
+						projectSlug := ctx.Args().First()
+						err := PushDependencyFiles(projectSlug, config)
 						if err != nil {
 							fmt.Println(err)
 							os.Exit(1)

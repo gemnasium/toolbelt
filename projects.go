@@ -10,21 +10,17 @@ import (
 	"log"
 	"net/http"
 	"os"
-	"path/filepath"
 	"reflect"
-	"regexp"
 
-	"github.com/codegangsta/cli"
 	"github.com/olekukonko/tablewriter"
 	"github.com/wsxiaoys/terminal/color"
 	"gopkg.in/yaml.v1"
 )
 
 const (
-	LIST_PROJECTS_PATH         = "/projects"
-	CREATE_PROJECT_PATH        = "/projects"
-	LIVE_EVAL_PATH             = "/evaluate"
-	SUPPORTED_DEPENDENCY_FILES = `(Gemfile|Gemfile\.lock|.*\.gemspec|package\.json|npm-shrinkwrap\.json|setup\.py|requirements\.txt|requires\.txt|composer\.json|composer\.lock)$`
+	LIST_PROJECTS_PATH  = "/projects"
+	CREATE_PROJECT_PATH = "/projects"
+	LIVE_EVAL_PATH      = "/evaluate"
 )
 
 // List projects on gemnasium
@@ -246,7 +242,7 @@ func CreateProject(projectName string, config *Config, r io.Reader) error {
 	if err := json.Unmarshal(body, &jsonResp); err != nil {
 		return err
 	}
-	fmt.Printf("Project '%s' created! (Remaining private slots: %v)\n", project.Name, jsonResp["remaining_slot_count"])
+	fmt.Printf("Project '%s' created: https://gemnasium.com/%s (Remaining slots: %v)\n", project.Name, jsonResp["slug"], jsonResp["remaining_slot_count"])
 	fmt.Printf("To configure this project, use the following command:\ngemnasium projects configure %s\n", jsonResp["slug"])
 	return nil
 }
@@ -275,32 +271,6 @@ func ConfigureProject(slug string, config *Config, r io.Reader, f *os.File) erro
 	}
 	// Issue a Sync to flush writes to stable storage.
 	f.Sync()
-	return nil
-}
-
-// Push project dependencies
-// Not yet implemented and WIP
-func PushDependencies(ctx *cli.Context, config *Config) error {
-	deps := []DependencyFile{}
-	searchDeps := func(path string, info os.FileInfo, err error) error {
-
-		// Skip excluded paths
-		if info.IsDir() && info.Name() == ".git" {
-			return filepath.SkipDir
-		}
-		matched, err := regexp.MatchString(SUPPORTED_DEPENDENCY_FILES, info.Name())
-		if err != nil {
-			return err
-		}
-
-		if matched {
-			fmt.Printf("[debug] Found: %s\n", info.Name())
-			deps = append(deps, DependencyFile{Path: info.Name(), SHA: "sha", Content: []byte("content")})
-		}
-		return nil
-	}
-	filepath.Walk(".", searchDeps)
-	fmt.Printf("deps %+v\n", deps)
 	return nil
 }
 

@@ -1,20 +1,18 @@
-package main
+package models
 
 import (
 	"bytes"
 	"crypto/sha1"
-	"encoding/json"
-	"errors"
 	"fmt"
 	"io"
 	"io/ioutil"
-	"net/http"
 	"os"
 	"os/exec"
 	"path/filepath"
 	"regexp"
 	"strings"
 
+	"github.com/gemnasium/toolbelt/gemnasium"
 	"github.com/olekukonko/tablewriter"
 )
 
@@ -135,42 +133,10 @@ func GetFileSHA1(filePath string) (string, error) {
 	return fmt.Sprintf("%x", hash), nil
 }
 
-func ListDependencyFiles(projectSlug string, config *Config) error {
-	if projectSlug == "" {
-		return errors.New("[projectSlug] can't be empty")
-	}
-	client := &http.Client{}
-	url := fmt.Sprintf("%s/projects/%s/dependency_files", config.APIEndpoint, projectSlug)
-	req, err := NewAPIRequest("GET", url, config.APIKey, nil)
+func ListDependencyFiles(project *Project) error {
+
+	dfiles, err := project.DependencyFiles()
 	if err != nil {
-		return err
-	}
-
-	resp, err := client.Do(req)
-	if err != nil {
-		return err
-	}
-	defer resp.Body.Close()
-
-	if resp.StatusCode != http.StatusOK {
-		return fmt.Errorf("Server returned non-200 status: %v\n", resp.Status)
-	}
-
-	body, err := ioutil.ReadAll(resp.Body)
-	if err != nil {
-		return err
-	}
-
-	// if RawFormat flag is set, don't format the output
-	if config.RawFormat {
-		fmt.Printf("%s", body)
-		return nil
-	}
-
-	// Parse server response
-	var dfiles []DependencyFile
-	if err := json.Unmarshal(body, &dfiles); err != nil {
-		fmt.Printf("body %+v\n", string(body))
 		return err
 	}
 
@@ -215,42 +181,21 @@ var getLocalDependencyFiles = func() ([]DependencyFile, error) {
 
 // Push project dependencies
 // The current path will be scanned for supported dependency files (SUPPORTED_DEPENDENCY_FILES)
-func PushDependencyFiles(projectSlug string, config *Config) error {
+func PushDependencyFiles(projectSlug string) error {
 	dfiles, err := getLocalDependencyFiles()
 	if err != nil {
 		return err
 	}
 
-	dfilesJSON, err := json.Marshal(dfiles)
-	if err != nil {
-		return err
-	}
-	client := &http.Client{}
-	url := fmt.Sprintf("%s/projects/%s/dependency_files", config.APIEndpoint, projectSlug)
-	req, err := NewAPIRequest("POST", url, config.APIKey, bytes.NewReader(dfilesJSON))
-	if err != nil {
-		return err
-	}
-	resp, err := client.Do(req)
-	if err != nil {
-		return err
-	}
-	defer resp.Body.Close()
-	body, err := ioutil.ReadAll(resp.Body)
-	if err != nil {
-		return err
-	}
-
-	if resp.StatusCode != http.StatusOK {
-		return fmt.Errorf("Server returned non-200 status: %v\n", resp.Status)
-	}
-
-	// Parse server response
 	var jsonResp map[string][]DependencyFile
-	if err := json.Unmarshal(body, &jsonResp); err != nil {
-		fmt.Printf("body %s\n", body)
-		return err
+
+	opts := &gemnasium.APIRequestOptions{
+		Method: "POST",
+		URI:    fmt.Sprintf("/projects/%s/dependency_files", projectSlug),
+		Body:   dfiles,
+		Result: &jsonResp,
 	}
+	err = gemnasium.APIRequest(opts)
 
 	added := []string{}
 	for _, df := range jsonResp["added"] {

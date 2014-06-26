@@ -1,4 +1,4 @@
-package main
+package autoupdate
 
 import (
 	"errors"
@@ -7,6 +7,8 @@ import (
 	"os/exec"
 	"regexp"
 	"strings"
+
+	"github.com/gemnasium/toolbelt/models"
 )
 
 const (
@@ -22,7 +24,7 @@ var cantUpdateVersions = errors.New("Can't update versions")
 // will be used to generate a full patch for the user. These slices have to be
 // references, as in case of failure during the update, the files still need to
 // be restored.
-type UpdateFunc func([]VersionUpdate, *[]DependencyFile, *[]DependencyFile) error
+type UpdateFunc func([]VersionUpdate, *[]models.DependencyFile, *[]models.DependencyFile) error
 
 var updaters = map[string]UpdateFunc{
 	"Rubygem": RubygemsUpdater,
@@ -32,9 +34,9 @@ func NewUpdater(packageType string) UpdateFunc {
 	return updaters[packageType]
 }
 
-func RubygemsUpdater(versionUpdates []VersionUpdate, orgDepFiles, uptDepFiles *[]DependencyFile) error {
+func RubygemsUpdater(versionUpdates []VersionUpdate, orgDepFiles, uptDepFiles *[]models.DependencyFile) error {
 	// we're going to update gemfile.lock, let's save it to later restoration
-	GemfileLock := NewDependencyFile("Gemfile.lock")
+	GemfileLock := models.NewDependencyFile("Gemfile.lock")
 	*orgDepFiles = append(*orgDepFiles, *GemfileLock)
 
 	upt := BUNDLE_UPDATE_CMD

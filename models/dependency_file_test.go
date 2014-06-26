@@ -1,4 +1,4 @@
-package main
+package models
 
 import (
 	"bytes"
@@ -10,6 +10,8 @@ import (
 	"net/http/httptest"
 	"os"
 	"testing"
+
+	"github.com/gemnasium/toolbelt/config"
 )
 
 type TestFile struct {
@@ -161,8 +163,8 @@ func TestListDependencyFiles(t *testing.T) {
 	old := os.Stdout // keep backup of the real stdout
 	r, w, _ := os.Pipe()
 	os.Stdout = w
-	config := &Config{APIEndpoint: ts.URL}
-	err := ListDependencyFiles("blah", config)
+	config.APIEndpoint = ts.URL
+	err := ListDependencyFiles(&Project{Slug: "blah"})
 	if err != nil {
 		t.Error(err)
 	}
@@ -203,7 +205,7 @@ func TestPushDependencyFiles(t *testing.T) {
 	old := os.Stdout // keep backup of the real stdout
 	r, w, _ := os.Pipe()
 	os.Stdout = w
-	config := &Config{APIEndpoint: ts.URL}
+	config.APIEndpoint = ts.URL
 
 	getLocalDependencyFiles = func() ([]DependencyFile, error) {
 		return []DependencyFile{
@@ -213,7 +215,7 @@ func TestPushDependencyFiles(t *testing.T) {
 		}, nil
 	}
 
-	err := PushDependencyFiles("blah", config)
+	err := PushDependencyFiles("blah")
 	if err != nil {
 		t.Error(err)
 	}

@@ -1,4 +1,4 @@
-package main
+package autoupdate
 
 import (
 	"fmt"
@@ -6,6 +6,9 @@ import (
 	"net/http/httptest"
 	"reflect"
 	"testing"
+
+	"github.com/gemnasium/toolbelt/config"
+	"github.com/gemnasium/toolbelt/models"
 )
 
 func TestFetchUpdateSet(t *testing.T) {
@@ -16,13 +19,13 @@ func TestFetchUpdateSet(t *testing.T) {
 		fmt.Fprintln(w, jsonOutput)
 	}))
 	defer ts.Close()
-	config := &Config{APIEndpoint: ts.URL}
+	config.APIEndpoint = ts.URL
 	expectedUpdateSet := &UpdateSet{
 		ID: 1,
 		RequirementUpdates: map[string][]RequirementUpdate{
 			"Rubygem": []RequirementUpdate{
 				RequirementUpdate{
-					File: DependencyFile{
+					File: models.DependencyFile{
 						Path: "Gemfile",
 						SHA:  "dc6bdc865c85a4f5c6ef0f4ba8909d8652fd8cd0",
 					},
@@ -33,7 +36,7 @@ func TestFetchUpdateSet(t *testing.T) {
 		VersionUpdates: map[string][]VersionUpdate{},
 	}
 
-	resultSet, err := fetchUpdateSet("blah", config)
+	resultSet, err := fetchUpdateSet("blah")
 	if err != nil {
 		t.Error(err)
 	}

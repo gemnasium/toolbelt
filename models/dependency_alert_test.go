@@ -1,4 +1,4 @@
-package main
+package models
 
 import (
 	"bytes"
@@ -8,6 +8,8 @@ import (
 	"net/http/httptest"
 	"os"
 	"testing"
+
+	"github.com/gemnasium/toolbelt/config"
 )
 
 func TestListDependencyAlerts(t *testing.T) {
@@ -41,21 +43,20 @@ func TestListDependencyAlerts(t *testing.T) {
 	old := os.Stdout // keep backup of the real stdout
 	r, w, _ := os.Pipe()
 	os.Stdout = w
-	config := &Config{APIEndpoint: ts.URL}
-	ListDependencyAlerts("blah", config)
+	config.APIEndpoint = ts.URL
+	ListDependencyAlerts(&Project{Slug: "blah"})
 	w.Close()
 	var buf bytes.Buffer
 	io.Copy(&buf, r)
 	os.Stdout = old // restoring the real stdout
 
-	expectedOutput :=
-		`+----------+---------------------+--------------+
-| ADVISORY |        DATE         |    STATUS    |
-+----------+---------------------+--------------+
-| 1        | 07 May 14 09:59 UTC | acknowledged |
-| 2        | 07 May 14 09:59 UTC | closed       |
-+----------+---------------------+--------------+
-`
+	expectedOutput := "+----------+---------------------+--------------+\n"
+	expectedOutput += "| ADVISORY |        DATE         |    STATUS    |\n"
+	expectedOutput += "+----------+---------------------+--------------+\n"
+	expectedOutput += "| 1        | 07 May 14 09:59 UTC | acknowledged |\n"
+	expectedOutput += "| 2        | 07 May 14 09:59 UTC | closed       |\n"
+	expectedOutput += "+----------+---------------------+--------------+\n"
+
 	if buf.String() != expectedOutput {
 		t.Errorf("Expected ouput:\n%s\n\nGot:\n%s", expectedOutput, buf.String())
 	}

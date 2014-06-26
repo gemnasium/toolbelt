@@ -1,4 +1,4 @@
-package main
+package autoupdate
 
 import (
 	"errors"
@@ -8,6 +8,8 @@ import (
 	"path"
 	"regexp"
 	"strings"
+
+	"github.com/gemnasium/toolbelt/models"
 )
 
 const (
@@ -17,7 +19,7 @@ const (
 
 var cantInstallRequirements = errors.New("Can't install requirements")
 
-type InstallRequirementsFunc func([]RequirementUpdate, *[]DependencyFile, *[]DependencyFile) error
+type InstallRequirementsFunc func([]RequirementUpdate, *[]models.DependencyFile, *[]models.DependencyFile) error
 
 var installers = map[string]InstallRequirementsFunc{
 	"Rubygem": RubygemsInstaller,
@@ -27,7 +29,7 @@ func NewRequirementsInstaller(packageType string) InstallRequirementsFunc {
 	return installers[packageType]
 }
 
-func RubygemsInstaller(reqUpdates []RequirementUpdate, orgDepFiles, uptDepFiles *[]DependencyFile) error {
+func RubygemsInstaller(reqUpdates []RequirementUpdate, orgDepFiles, uptDepFiles *[]models.DependencyFile) error {
 	for _, ru := range reqUpdates {
 		err := PatchFile(ru, orgDepFiles, uptDepFiles)
 		if err != nil {
@@ -74,8 +76,8 @@ func RubygemsInstaller(reqUpdates []RequirementUpdate, orgDepFiles, uptDepFiles 
 }
 
 // Should be common to other updaters
-func PatchFile(ru RequirementUpdate, orgDepFiles, uptDepFiles *[]DependencyFile) error {
-	var f DependencyFile = ru.File
+func PatchFile(ru RequirementUpdate, orgDepFiles, uptDepFiles *[]models.DependencyFile) error {
+	var f models.DependencyFile = ru.File
 	err := f.CheckFileSHA1()
 	if err != nil {
 		return err

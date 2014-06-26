@@ -1,4 +1,4 @@
-package main
+package models
 
 import (
 	"bytes"
@@ -13,6 +13,7 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/gemnasium/toolbelt/config"
 	"github.com/wsxiaoys/terminal/color"
 )
 
@@ -62,34 +63,32 @@ func TestCreateProject(t *testing.T) {
 	ts := CreateProjectTestServer(t, apiKey)
 	defer ts.Close()
 
-	config := &Config{APIEndpoint: ts.URL, APIKey: apiKey}
+	config.APIEndpoint = ts.URL
+	config.APIKey = apiKey
 	r := strings.NewReader("Project description\n")
-	err := CreateProject("test_project", config, r)
+	err := CreateProject("test_project", r)
 	if err != nil {
 		t.Error(err)
 	}
 }
 
 func TestCreateProjectWithWrongToken(t *testing.T) {
-
 	apiKey := "abcxyz123"
 
 	// Fake gemnasium api
 	ts := CreateProjectTestServer(t, apiKey)
 	defer ts.Close()
 
-	config := &Config{APIEndpoint: ts.URL, APIKey: "invalid_key"}
+	config.APIEndpoint = ts.URL
+	config.APIKey = "invalid_key"
 	r := strings.NewReader("Project description\n")
-	err := CreateProject("test_project", config, r)
+	err := CreateProject("test_project", r)
 	if err.Error() != "Server returned non-200 status: 401 Unauthorized\n" {
 		t.Error(err)
 	}
 }
 
 func TestConfigureProject(t *testing.T) {
-
-	config, _ := NewConfig([]byte{})
-
 	// set first param
 	tmp, err := ioutil.TempFile("", "gemnasium")
 	if err != nil {
@@ -97,7 +96,8 @@ func TestConfigureProject(t *testing.T) {
 	}
 	defer tmp.Close()
 	defer os.Remove(tmp.Name())
-	err = ConfigureProject("my_slug", config, os.Stdin, tmp)
+	p := &Project{Slug: "blah"}
+	err = p.Configure("my_slug", os.Stdin, tmp)
 	if err != nil {
 		t.Error(err)
 	}
@@ -113,13 +113,14 @@ func TestSyncProject(t *testing.T) {
 
 	}))
 	defer ts.Close()
-	config := &Config{APIEndpoint: ts.URL}
+	config.APIEndpoint = ts.URL
 	// silent stdout
 	old := os.Stdout
 	_, w, _ := os.Pipe()
 	w.Close()
 	os.Stdout = w
-	err := SyncProject("blah", config)
+	p := &Project{Slug: "blah"}
+	err := p.Sync()
 	os.Stdout = old
 	if err != nil {
 		t.Errorf("SyncProject failed with err: %s", err)
@@ -146,7 +147,7 @@ func TestUpdateProject(t *testing.T) {
 	old := os.Stdout // keep backup of the real stdout
 	r, w, _ := os.Pipe()
 	os.Stdout = w
-	config := &Config{APIEndpoint: ts.URL}
+	config.APIEndpoint = ts.URL
 	var name, desc *string
 	var monitored *bool
 	nameStr := "API_project"
@@ -155,7 +156,11 @@ func TestUpdateProject(t *testing.T) {
 	desc = &descStr
 	monitoredBool := false
 	monitored = &monitoredBool
-	UpdateProject("blah", config, name, desc, monitored)
+	p := &Project{Slug: "blah"}
+	err := p.Update(name, desc, monitored)
+	if err != nil {
+		t.Fatal(err)
+	}
 	w.Close()
 	var buf bytes.Buffer
 	io.Copy(&buf, r)
@@ -168,7 +173,8 @@ func TestUpdateProject(t *testing.T) {
 }
 
 func TestUpdateProjectWithNoParams(t *testing.T) {
-	err := UpdateProject("blah", &Config{}, nil, nil, nil)
+	p := &Project{Slug: "blah"}
+	err := p.Update(nil, nil, nil)
 	if err.Error() != "Please specify at least one thing to update (name, desc, or monitored" {
 		t.Errorf("Expected error to be 'Please specify at least one thing to update (name, desc, or monitored', got %s\n", err)
 	}

@@ -284,7 +284,7 @@ func GetProject(slugs ...string) (*Project, error) {
 		slug = envSlug
 	}
 	if slug == "" {
-		return nil, errors.New("[slug] can't be empty")
+		return nil, errors.New("[project slug] can't be empty")
 	}
 	return &Project{Slug: slug}, nil
 }

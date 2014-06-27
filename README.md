@@ -111,8 +111,10 @@ Options set in ```.gemnasium.yml``` are overriden by env vars:
  and env vars are overriden by command line options.
  Ex: 
 
-    echo 'project_slug: tic' > .gemnasium.yml ; PROJECT_SLUG="tac" gemnasium projects show toe
-    => [toe project details]
+```
+echo 'project_slug: tic' > .gemnasium.yml ; PROJECT_SLUG="tac" gemnasium projects show toe
+=> [toe project details]
+```
 
 ### Need further help ?
 

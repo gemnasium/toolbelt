@@ -88,8 +88,3 @@ func TestWithEnvVars(t *testing.T) {
 		t.Errorf("IgnoredPaths doesn't match. Expected: %v, got %v", ignored_paths, IgnoredPaths)
 	}
 }
-
-func TestWithInvalidConfigFile(t *testing.T) {
-
-	loadConfig()
-}

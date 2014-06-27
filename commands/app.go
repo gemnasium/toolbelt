@@ -122,10 +122,11 @@ func App() (*cli.App, error) {
 					Action:    DependencyFilesList,
 				},
 				{
-					Name:      "push",
-					ShortName: "p",
-					Usage:     "Push dependency files on Gemnasium",
-					Action:    DependenciesPush,
+					Name:        "push",
+					ShortName:   "p",
+					Usage:       "Push dependency files on Gemnasium",
+					Description: "All dependency files supported by Gemnasium found in the current path will be sent to Gemnasium API. You can ignore paths with IGNORED_PATHS",
+					Action:      DependenciesPush,
 				},
 			},
 		},
@@ -163,7 +164,7 @@ func App() (*cli.App, error) {
 				cli.StringFlag{"project, p", "", "Project slug (identifier on Gemnasium)"},
 			},
 			Description: `Auto-Update will fetch update sets from Gemnasium and run your test suite against them.
-   The test suite can be passed as second argument (first being the project_slug), or through the env var GEMNASIUM_TESTSUITE.
+   The test suite can be passed as arguments, or through the env var GEMNASIUM_TESTSUITE.
 
    Arguments:
 
@@ -171,7 +172,7 @@ func App() (*cli.App, error) {
 
    Env Vars:
 
-   - PROJECT_SLUG: override -project flag and project_slug in .gemnasium.yml.
+   - PROJECT_SLUG: override --project flag and project_slug in .gemnasium.yml.
    - GEMNASIUM_TESTSUITE: will be run for each iteration over update sets. This is typically your test suite script.
    - GEMNASIUM_BUNDLE_INSTALL_CMD: [Ruby Only] during each iteration, the new bundle will be installed. Default: "bundle install"
    - GEMNASIUM_BUNDLE_UPDATE_CMD: [Ruby Only] during each iteration, some gems might be updated. This command will be used. Default: "bundle update"

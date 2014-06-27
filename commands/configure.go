@@ -4,7 +4,6 @@ import (
 	"os"
 
 	"github.com/codegangsta/cli"
-	"github.com/gemnasium/toolbelt/config"
 	"github.com/gemnasium/toolbelt/models"
 	"github.com/gemnasium/toolbelt/utils"
 )
@@ -15,7 +14,7 @@ func Configure(ctx *cli.Context) {
 	defer f.Close()
 
 	slug := ctx.Args().First()
-	project, err := models.GetProject(slug, config.ProjectSlug)
+	project, err := models.GetProject(slug)
 
 	// TODO: slug can be empty
 	err = project.Configure(project.Slug, os.Stdin, f)

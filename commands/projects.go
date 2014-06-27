@@ -4,7 +4,6 @@ import (
 	"os"
 
 	"github.com/codegangsta/cli"
-	"github.com/gemnasium/toolbelt/config"
 	"github.com/gemnasium/toolbelt/models"
 	"github.com/gemnasium/toolbelt/utils"
 )
@@ -15,14 +14,14 @@ func ProjectsList(ctx *cli.Context) {
 }
 
 func ProjectsShow(ctx *cli.Context) {
-	project, err := models.GetProject(ctx.Args().First(), config.ProjectSlug)
+	project, err := models.GetProject(ctx.Args().First())
 	utils.ExitIfErr(err)
 	err = project.Show()
 	utils.ExitIfErr(err)
 }
 
 func ProjectsUpdate(ctx *cli.Context) {
-	project, err := models.GetProject(ctx.Args().First(), config.ProjectSlug)
+	project, err := models.GetProject(ctx.Args().First())
 	utils.ExitIfErr(err)
 	var name, desc *string
 	var monitored *bool
@@ -50,7 +49,7 @@ func ProjectsCreate(ctx *cli.Context) {
 }
 
 func ProjectsSync(ctx *cli.Context) {
-	project, err := models.GetProject(ctx.Args().First(), config.ProjectSlug)
+	project, err := models.GetProject(ctx.Args().First())
 	utils.ExitIfErr(err)
 	err = project.Sync()
 	utils.ExitIfErr(err)

@@ -274,14 +274,11 @@ func (p *Project) DependencyFiles() (dfiles []DependencyFile, err error) {
 // Return a new Project with Slug set.
 // The slugs in param are tried in order.
 func GetProject(slugs ...string) (*Project, error) {
-	var slug string
+	slug := config.ProjectSlug
 	for _, s := range slugs {
 		if s != "" {
 			slug = s
 		}
-	}
-	if envSlug := os.Getenv(ENV_PROJECT_SLUG); envSlug != "" {
-		slug = envSlug
 	}
 	if slug == "" {
 		return nil, errors.New("[project slug] can't be empty")

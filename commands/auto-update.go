@@ -10,7 +10,7 @@ import (
 
 func AutoUpdate(ctx *cli.Context) {
 	auth.AttemptLogin(ctx)
-	project, err := models.GetProject(ctx.Args().First())
+	project, err := models.GetProject(ctx.String("project"))
 	utils.ExitIfErr(err)
 	err = autoupdate.Run(project.Slug, ctx.Args())
 	utils.ExitIfErr(err)

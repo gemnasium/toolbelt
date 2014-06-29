@@ -17,7 +17,10 @@ const (
 	BUNDLE_INSTALL_CMD               = "bundle install"
 )
 
-var cantInstallRequirements = errors.New("Can't install requirements")
+var (
+	cantInstallRequirements = errors.New("Can't install requirements")
+	cantFindInstaller       = "Can't find installer for package type: %s\n"
+)
 
 type InstallRequirementsFunc func([]RequirementUpdate, *[]models.DependencyFile, *[]models.DependencyFile) error
 
@@ -25,8 +28,11 @@ var installers = map[string]InstallRequirementsFunc{
 	"Rubygem": RubygemsInstaller,
 }
 
-func NewRequirementsInstaller(packageType string) InstallRequirementsFunc {
-	return installers[packageType]
+func NewRequirementsInstaller(packageType string) (InstallRequirementsFunc, error) {
+	if inst, ok := installers[packageType]; ok {
+		return inst, nil
+	}
+	return nil, fmt.Errorf(cantFindInstaller, packageType)
 }
 
 func RubygemsInstaller(reqUpdates []RequirementUpdate, orgDepFiles, uptDepFiles *[]models.DependencyFile) error {

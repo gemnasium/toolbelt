@@ -163,7 +163,11 @@ func fetchUpdateSet(projectSlug string) (*UpdateSet, error) {
 // their content
 func applyUpdateSet(updateSet *UpdateSet) (orgDepFiles, uptDepFiles []models.DependencyFile, err error) {
 	for packageType, reqUpdates := range updateSet.RequirementUpdates {
-		installer := NewRequirementsInstaller(packageType)
+		installer, err := NewRequirementsInstaller(packageType)
+		if err != nil {
+			return orgDepFiles, uptDepFiles, err
+		}
+
 		err = installer(reqUpdates, &orgDepFiles, &uptDepFiles)
 		if err != nil {
 			return orgDepFiles, uptDepFiles, err
@@ -172,7 +176,10 @@ func applyUpdateSet(updateSet *UpdateSet) (orgDepFiles, uptDepFiles []models.Dep
 
 	for packageType, versionUpdates := range updateSet.VersionUpdates {
 		// Update Versions
-		updater := NewUpdater(packageType)
+		updater, err := NewUpdater(packageType)
+		if err != nil {
+			return orgDepFiles, uptDepFiles, err
+		}
 		err = updater(versionUpdates, &orgDepFiles, &uptDepFiles)
 		if err != nil {
 			return orgDepFiles, uptDepFiles, err

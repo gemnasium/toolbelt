@@ -16,7 +16,10 @@ const (
 	ENV_GEMNASIUM_BUNDLE_UPDATE_CMD = "GEMNASIUM_BUNDLE_UPDATE_CMD"
 )
 
-var cantUpdateVersions = errors.New("Can't update versions")
+var (
+	cantUpdateVersions = errors.New("Can't update versions")
+	cantFindUpdater    = "Can't find updater for package type: %s\n"
+)
 
 // Func template for updaters Update Funcs take an UpdateSet, and a ref on the
 // list of original and updated files. Original files are to be restored, while
@@ -30,8 +33,11 @@ var updaters = map[string]UpdateFunc{
 	"Rubygem": RubygemsUpdater,
 }
 
-func NewUpdater(packageType string) UpdateFunc {
-	return updaters[packageType]
+func NewUpdater(packageType string) (UpdateFunc, error) {
+	if upt, ok := updaters[packageType]; ok {
+		return upt, nil
+	}
+	return nil, fmt.Errorf(cantFindUpdater, packageType)
 }
 
 func RubygemsUpdater(versionUpdates []VersionUpdate, orgDepFiles, uptDepFiles *[]models.DependencyFile) error {

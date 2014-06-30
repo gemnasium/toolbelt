@@ -10,15 +10,8 @@ import (
 	"github.com/olekukonko/tablewriter"
 )
 
-type DependencyAlert struct {
-	ID       int       `json:"id"`
-	Advisory Advisory  `json:"advisory"`
-	OpenAt   time.Time `json:"open_at"`
-	Status   string    `json:"status"`
-}
-
 func ListDependencyAlerts(project *Project) error {
-	var alerts []DependencyAlert
+	var alerts []Alert
 	opts := &gemnasium.APIRequestOptions{
 		Method: "GET",
 		URI:    fmt.Sprintf("/projects/%s/alerts", project.Slug),

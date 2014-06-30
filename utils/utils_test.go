@@ -1,4 +1,4 @@
-package main
+package utils
 
 import (
 	"io"
@@ -57,7 +57,7 @@ func testStatusDot(t *testing.T) {
 		{"purple", "@k\u2B24 @k\u2B24 @k\u2B24  @{|}(none)"},
 	}
 	for _, test := range tt {
-		dots := statusDots(test.Color)
+		dots := StatusDots(test.Color)
 		if dots != test.Expected {
 			t.Errorf("%s expected, got: %s", test.Expected, dots)
 		}

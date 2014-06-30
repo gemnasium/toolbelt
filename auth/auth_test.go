@@ -1,4 +1,4 @@
-package main
+package auth
 
 import (
 	"bytes"
@@ -8,6 +8,7 @@ import (
 	"testing"
 
 	"github.com/bgentry/go-netrc/netrc"
+	"github.com/gemnasium/toolbelt/config"
 )
 
 func TestLogin(t *testing.T) {
@@ -24,11 +25,10 @@ func TestLogin(t *testing.T) {
 			t.Errorf("Expected a POST, got a %s", r.Method)
 		}
 
-		decoder := json.NewDecoder(r.Body)
 		var credentials struct {
 			Email, Password string
 		}
-		err := decoder.Decode(&credentials)
+		err := json.NewDecoder(r.Body).Decode(&credentials)
 		if err != nil {
 			t.Error(err)
 		}
@@ -42,7 +42,7 @@ func TestLogin(t *testing.T) {
 	}))
 	defer ts.Close()
 
-	config := &Config{APIEndpoint: ts.URL}
+	config.APIEndpoint = ts.URL
 	// don't try to use stdin
 	getCredentials = func() (email, password string, err error) {
 		return "batman@example.com", "secret123", nil
@@ -60,7 +60,7 @@ func TestLogin(t *testing.T) {
 		_, err := netrcFile.Write(body)
 		return err
 	}
-	err := Login(config)
+	err := Login()
 	if err != nil {
 		t.Error(err)
 	}
@@ -84,7 +84,7 @@ func TestLogout(t *testing.T) {
 	  password abcxyz123
 	`)
 
-	config := &Config{APIEndpoint: "http://127.0.0.1/api"}
+	config.APIEndpoint = "http://127.0.0.1/api"
 	loadNetrc = func() *netrc.Netrc {
 		nrc, _ := netrc.Parse(netrcFile)
 		return nrc
@@ -93,7 +93,7 @@ func TestLogout(t *testing.T) {
 		_, err := netrcFile.Write(body)
 		return err
 	}
-	err := Logout(config)
+	err := Logout()
 	if err != nil {
 		t.Error(err)
 	}

@@ -1,11 +1,8 @@
 // +build windows
 
-package main
+package auth
 
-import (
-	"os"
-	"os/exec"
-)
+import "os"
 
 const (
 	netrcFilename           = "_netrc"

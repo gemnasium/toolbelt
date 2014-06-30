@@ -1,5 +1,8 @@
-# Changelog
+0.0.2 / unreleased
 
-## 0.1.0 - 2014-06-18
+* Auto-update for ruby (http://docs.gemnasium.apiary.io/#autoupdate)
+* Dependency files support (list / pust) (http://docs.gemnasium.apiary.io/#dependencyfiles)
+
+0.0.1 / 2014-06-18
 
 Initial release

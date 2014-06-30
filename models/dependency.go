@@ -1,12 +1,7 @@
-package main
+package models
 
 import (
-	"encoding/json"
-	"errors"
-	"fmt"
 	"io"
-	"io/ioutil"
-	"net/http"
 	"os"
 	"sort"
 	"strconv"
@@ -15,42 +10,20 @@ import (
 	"github.com/olekukonko/tablewriter"
 )
 
+type Dependency struct {
+	Requirement   string     `json:"requirement"`
+	LockedVersion string     `json:"locked_version"`
+	Package       Package    `json:"package"`
+	Type          string     `json:"type"`
+	FirstLevel    bool       `json:"first_level"`
+	Color         string     `json:"color"`
+	Advisories    []Advisory `json:"advisories,omitempty"`
+}
+
 // http://docs.gemnasium.apiary.io/#dependencies
-func ListDependencies(projectSlug string, config *Config) error {
-	if projectSlug == "" {
-		return errors.New("[projectSlug] can't be empty")
-	}
-	client := &http.Client{}
-	url := fmt.Sprintf("%s/projects/%s/dependencies", config.APIEndpoint, projectSlug)
-	req, err := NewAPIRequest("GET", url, config.APIKey, nil)
+func ListDependencies(project *Project) error {
+	deps, err := project.Dependencies()
 	if err != nil {
-		return err
-	}
-
-	resp, err := client.Do(req)
-	if err != nil {
-		return err
-	}
-	defer resp.Body.Close()
-
-	if resp.StatusCode != http.StatusOK {
-		return fmt.Errorf("Server returned non-200 status: %v\n", resp.Status)
-	}
-
-	body, err := ioutil.ReadAll(resp.Body)
-	if err != nil {
-		return err
-	}
-
-	// if RawFormat flag is set, don't format the output
-	if config.RawFormat {
-		fmt.Printf("%s", body)
-		return nil
-	}
-
-	// Parse server response
-	var deps []Dependency
-	if err := json.Unmarshal(body, &deps); err != nil {
 		return err
 	}
 

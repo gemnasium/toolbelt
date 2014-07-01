@@ -41,7 +41,7 @@ func App() (*cli.App, error) {
 		{
 			Name:        "configure",
 			Usage:       "Install configuration for an existing project",
-			Description: "Will create a .gemnasium.yml file in the current directory. This file will be parse if present.\n  Warning: this command will overwrite existing .gemnasium.yml file.\n  Arguments: project_slug (the identifier of the project).",
+			Description: "Will create a .gemnasium.yml file in the current directory. This file will be parse if present.\n   Warning: this command will overwrite existing .gemnasium.yml file.\n\n   Arguments: project_slug (the identifier of the project).",
 			Action:      Configure,
 		},
 		{

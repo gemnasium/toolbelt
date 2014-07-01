@@ -15,6 +15,7 @@ func Configure(ctx *cli.Context) {
 
 	slug := ctx.Args().First()
 	project, err := models.GetProject(slug)
+	utils.ExitIfErr(err)
 
 	// TODO: slug can be empty
 	err = project.Configure(project.Slug, os.Stdin, f)

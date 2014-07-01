@@ -64,7 +64,7 @@ ignored_paths:                # Paths you want to ignore when searching for depe
 
 func TestWithEnvVars(t *testing.T) {
 	os.Setenv(ENV_API_ENDDPOINT, "http://localhost/")
-	os.Setenv(ENV_API_KEY, "new-key")
+	os.Setenv(ENV_TOKEN, "new-key")
 	os.Setenv(ENV_PROJECT_SLUG, "new-slug")
 	os.Setenv(ENV_PROJECT_BRANCH, "develop")
 	os.Setenv(ENV_IGNORED_PATHS, "/tmp,/foo,/bar")

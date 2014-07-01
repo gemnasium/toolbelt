@@ -22,7 +22,7 @@ const (
 	CONFIG_FILE_PATH = ".gemnasium.yml"
 
 	ENV_API_ENDDPOINT  = "API_ENDPOINT"
-	ENV_API_KEY        = "API_KEY"
+	ENV_TOKEN          = "GEMNASIUM_TOKEN"
 	ENV_PROJECT_SLUG   = "GEMNASIUM_PROJECT_SLUG"
 	ENV_PROJECT_BRANCH = "PROJECT_BRANCH"
 	ENV_IGNORED_PATHS  = "IGNORED_PATHS"
@@ -79,7 +79,7 @@ func loadConfig() {
 
 func loadEnv() {
 	APIEndpoint = getEnvOrElse(ENV_API_ENDDPOINT, APIEndpoint)
-	APIKey = getEnvOrElse(ENV_API_KEY, APIKey)
+	APIKey = getEnvOrElse(ENV_TOKEN, APIKey)
 	ProjectSlug = getEnvOrElse(ENV_PROJECT_SLUG, ProjectSlug)
 	ProjectBranch = getEnvOrElse(ENV_PROJECT_BRANCH, ProjectBranch)
 	if ip := os.Getenv(ENV_IGNORED_PATHS); ip != "" {

@@ -39,7 +39,7 @@ Gemnasium Toolbelt stores your Gemnasium API key into your .netrc file.
 
 To be logged in to Gemnasium, you need to run `gemnasium auth login` and enter your Gemnasium credentials.
 
-Alternatively, you can pass directly your API token to all commands with the option `--token` or the env var API_KEY.
+Alternatively, you can pass directly your API token to all commands with the option `--token` or the env var GEMNASIUM_TOKEN
 Your API token is available in your settings page (https://gemnasium.com/settings).
 
 ### Create a new project
@@ -102,7 +102,7 @@ Options set in ```.gemnasium.yml``` are overriden by env vars:
  * **GEMNASIUM_BUNDLE_UPDATE_CMD**: [Ruby Only] during each iteration, some gems might be updated. This command will be used. Default: "bundle update"
  * **BRANCH**: Current branch can be specified with this var, if the git command fails to run (git rev-parse --abbrev-ref HEAD).
  * **REVISION**: Current revision can be specified with this var, if the git command fails to run (git rev-parse --abbrev-ref HEAD)
- * **API_KEY**: Your API private key (available in your account settings https://gemnasium.com/settings)
+ * **GEMNASIUM_TOKEN**: Your API private token (available in your account settings https://gemnasium.com/settings)
  * **IGNORED_PATHS**: A list of paths separated by "," where dependency files are ignored.
  * **RAW_FORMAT**: Display API raw json output (for debug)
 

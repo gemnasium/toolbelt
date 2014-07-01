@@ -130,7 +130,7 @@ func AttemptLogin(ctx *cli.Context) error {
 
 // Error codes returned by auth failures
 var (
-	ErrEmptyToken = errors.New("auth: You must be logged in. Please use `gemnasium auth login` first, or pass your api token with --token or API_KEY=")
+	ErrEmptyToken = errors.New("auth: You must be logged in. Please use `gemnasium auth login` first, or pass your api token with --token or GEMNASIUM_TOKEN")
 )
 
 func netrcPath() string {

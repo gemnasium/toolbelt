@@ -16,18 +16,16 @@ And then
 
     brew install gemnasium-toolbelt
 
-If you don't want to use Homebrew, the executable is available under the directory `builds/macosx`.  
+If you don't want to use Homebrew, check out the Binaries section bellow.
 Or you can build it yourself by running:
 
     go build -o gemnasium
 
-### On Linux
-
-We built the package for Linux. It is available under the directory `builds/linux`.
-
-Alternatively, you can build it yourself by running:
+### From source
 
     go build -o gemnasium
+
+(or ```gemnasium.exe``` for windows users)
 
 ### Binaries
 

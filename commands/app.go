@@ -125,7 +125,7 @@ func App() (*cli.App, error) {
 					Name:        "push",
 					ShortName:   "p",
 					Usage:       "Push dependency files on Gemnasium",
-					Description: "All dependency files supported by Gemnasium found in the current path will be sent to Gemnasium API. You can ignore paths with IGNORED_PATHS",
+					Description: "All dependency files supported by Gemnasium found in the current path will be sent to Gemnasium API. You can ignore paths with GEMNASIUM_IGNORED_PATHS",
 					Action:      DependenciesPush,
 				},
 			},

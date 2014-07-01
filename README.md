@@ -96,21 +96,21 @@ The configuration can be saved in ```.gemnasium.yml``` files in the project dire
 Options set in ```.gemnasium.yml``` are overriden by env vars:
 
 
- * **PROJECT_SLUG**: override -project flag and project_slug in .gemnasium.yml.
+ * **GEMNASIUM_PROJECT_SLUG**: override -project flag and project_slug in .gemnasium.yml.
  * **GEMNASIUM_TESTSUITE**: will be run for each iteration over update sets. This is typically your test suite script.
  * **GEMNASIUM_BUNDLE_INSTALL_CMD**: [Ruby Only] during each iteration, the new bundle will be installed. Default: "bundle install"
  * **GEMNASIUM_BUNDLE_UPDATE_CMD**: [Ruby Only] during each iteration, some gems might be updated. This command will be used. Default: "bundle update"
  * **BRANCH**: Current branch can be specified with this var, if the git command fails to run (git rev-parse --abbrev-ref HEAD).
  * **REVISION**: Current revision can be specified with this var, if the git command fails to run (git rev-parse --abbrev-ref HEAD)
  * **GEMNASIUM_TOKEN**: Your API private token (available in your account settings https://gemnasium.com/settings)
- * **IGNORED_PATHS**: A list of paths separated by "," where dependency files are ignored.
- * **RAW_FORMAT**: Display API raw json output (for debug)
+ * **GEMNASIUM_IGNORED_PATHS**: A list of paths separated by "," where dependency files are ignored.
+ * **GEMNASIUM_RAW_FORMAT**: Display API raw json output (for debug)
 
  and env vars are overriden by command line options.
  Ex: 
 
 ```
-echo 'project_slug: tic' > .gemnasium.yml ; PROJECT_SLUG="tac" gemnasium projects show toe
+echo 'project_slug: tic' > .gemnasium.yml ; GEMNASIUM_PROJECT_SLUG="tac" gemnasium projects show toe
 => [toe project details]
 ```
 

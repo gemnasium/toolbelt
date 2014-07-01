@@ -1,8 +1,14 @@
-0.0.2 / unreleased
+0.2.1 / 2014-07-01
+
+* Rename env vars to make them consistent (#10, #4)
+* Fix live evaluation (#9)
+* Minor bug fixes
+
+0.2.0 / 2014-06-30
 
 * Auto-update for ruby (http://docs.gemnasium.apiary.io/#autoupdate)
 * Dependency files support (list / pust) (http://docs.gemnasium.apiary.io/#dependencyfiles)
 
-0.0.1 / 2014-06-18
+0.1.0 / 2014-06-18
 
 Initial release

@@ -312,6 +312,9 @@ func LiveEvaluation(files []string) error {
 		Result: &jsonResp,
 	}
 	err := gemnasium.APIRequest(opts)
+	if err != nil {
+		return err
+	}
 
 	// Wait until job is done
 	url := fmt.Sprintf("%s%s/%s", config.APIEndpoint, LIVE_EVAL_PATH, jsonResp["job_id"])

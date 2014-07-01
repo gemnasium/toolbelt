@@ -10,7 +10,7 @@ func App() (*cli.App, error) {
 	app := cli.NewApp()
 	app.Name = "gemnasium"
 	app.Usage = "Gemnasium toolbelt"
-	app.Version = "0.2.0"
+	app.Version = "0.2.1"
 	app.Author = "Gemnasium"
 	app.Email = "support@gemnasium.com"
 	app.Flags = []cli.Flag{
@@ -172,7 +172,7 @@ func App() (*cli.App, error) {
 
    Env Vars:
 
-   - PROJECT_SLUG: override --project flag and project_slug in .gemnasium.yml.
+   - GEMNASIUM_PROJECT_SLUG: override --project flag and project_slug in .gemnasium.yml.
    - GEMNASIUM_TESTSUITE: will be run for each iteration over update sets. This is typically your test suite script.
    - GEMNASIUM_BUNDLE_INSTALL_CMD: [Ruby Only] during each iteration, the new bundle will be installed. Default: "bundle install"
    - GEMNASIUM_BUNDLE_UPDATE_CMD: [Ruby Only] during each iteration, some gems might be updated. This command will be used. Default: "bundle update"
@@ -181,7 +181,7 @@ func App() (*cli.App, error) {
 
    Examples:
 
-   - GEMNASIUM_TESTSUITE="bundle exec rake" PROJECT_SLUG=a907c0f9b8e0b89f23f0042d76ae0358 gemnasium autoupdate
+   - GEMNASIUM_TESTSUITE="bundle exec rake" GEMNASIUM_PROJECT_SLUG=a907c0f9b8e0b89f23f0042d76ae0358 gemnasium autoupdate
    - cat script.sh | gemnasium autoupdate -p=your_project_slug
    - gemnasium autoupdate my_project_slug bundle exec rake
   `,

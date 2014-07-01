@@ -26,7 +26,6 @@ const (
 	LIST_PROJECTS_PATH  = "/projects"
 	CREATE_PROJECT_PATH = "/projects"
 	LIVE_EVAL_PATH      = "/evaluate"
-	ENV_PROJECT_SLUG    = "PROJECT_SLUG"
 )
 
 type Project struct {

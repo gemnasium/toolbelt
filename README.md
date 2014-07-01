@@ -74,7 +74,7 @@ The test suite can be passed as arguments, or through the env var GEMNASIUM_TEST
 
  Examples:
 
-    GEMNASIUM_TESTSUITE="bundle exec rake" PROJECT_SLUG=a907c0f9b8e0b89f23f0042d76ae0358 gemnasium autoupdate
+    GEMNASIUM_TESTSUITE="bundle exec rake" GEMNASIUM_PROJECT_SLUG=a907c0f9b8e0b89f23f0042d76ae0358 gemnasium autoupdate
 
     cat script.sh | gemnasium autoupdate -p=your_project_slug
 

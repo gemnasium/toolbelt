@@ -113,13 +113,19 @@ func Run(projectSlug string, testSuite []string) error {
 
 		out, err := executeTestSuite(testSuite)
 		if err == nil {
-			// we found a valid candidate, ending.
+			// we found a valid candidate
 			resultSet.State = UPDATE_SET_SUCCESS
 			err := pushUpdateSetResult(resultSet)
 			if err != nil {
 				return err
 			}
-			break
+
+			err = restoreDepFiles(orgDepFiles)
+			if err != nil {
+				return err
+			}
+
+			continue
 		}
 		// display cmd output
 		fmt.Printf("%s\n", out)

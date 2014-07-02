@@ -27,12 +27,12 @@ func ListDependencies(project *Project) error {
 		return err
 	}
 
-	renderDepsAsTable(deps, os.Stdout)
+	RenderDepsAsTable(deps, os.Stdout)
 	return nil
 }
 
 // Display deps in an ascii table
-func renderDepsAsTable(deps []Dependency, output io.Writer) {
+func RenderDepsAsTable(deps []Dependency, output io.Writer) {
 	// Display deps in an ascii table
 	table := tablewriter.NewWriter(output)
 	// TODO: Add a "type" header in deps have more than 1 type

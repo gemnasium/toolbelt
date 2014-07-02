@@ -1,3 +1,7 @@
+0.2.2 / 2014-07-02
+
+* Let the server decide when to end the job.
+
 0.2.1 / 2014-07-01
 
 * Rename env vars to make them consistent (#10, #4)

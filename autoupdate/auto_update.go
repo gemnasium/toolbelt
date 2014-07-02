@@ -92,18 +92,18 @@ func Run(projectSlug string, testSuite []string) error {
 		// We need to keep a list of updated files to restore them after this run
 		orgDepFiles, uptDepFiles, err := applyUpdateSet(updateSet)
 		resultSet := &UpdateSetResult{UpdateSetID: updateSet.ID, ProjectSlug: projectSlug, DependencyFiles: uptDepFiles}
+		defer func() {
+			err = restoreDepFiles(orgDepFiles)
+			if err != nil {
+				fmt.Printf("Error while restoring files: %s\n", err)
+			}
+		}()
 		if err == cantInstallRequirements || err == cantUpdateVersions {
 			resultSet.State = UPDATE_SET_INVALID
 			err := pushUpdateSetResult(resultSet)
 			if err != nil {
 				return err
 			}
-
-			err = restoreDepFiles(orgDepFiles)
-			if err != nil {
-				return err
-			}
-
 			// No need to try the update, it will fail
 			continue
 		}
@@ -134,11 +134,6 @@ func Run(projectSlug string, testSuite []string) error {
 		if err != nil {
 			return err
 		}
-		err = restoreDepFiles(orgDepFiles)
-		if err != nil {
-			return err
-		}
-
 		// Let's continue with another set
 	}
 	return nil

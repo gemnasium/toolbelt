@@ -1,6 +1,7 @@
-0.2.3 / unreleased
+0.2.4 / 2014-07-04
 
 * Fix login when .netrc file doesn't exist (#12)
+* Fix regression in auto update
 
 0.2.2 / 2014-07-02
 

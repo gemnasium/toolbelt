@@ -142,6 +142,14 @@ func netrcPath() string {
 }
 
 var loadNetrc = func() *netrc.Netrc {
+	if _, err := os.Stat(netrcPath()); err != nil {
+		f, err := os.Create(netrcPath())
+		if err != nil {
+			fmt.Printf("Can't create netrc file: %s\n", err)
+			return nil
+		}
+		f.Close()
+	}
 	nrc, err := netrc.ParseFile(netrcPath())
 	if err != nil {
 		if os.IsNotExist(err) {

@@ -105,6 +105,7 @@ Options set in ```.gemnasium.yml``` are overriden by env vars:
  * **GEMNASIUM_TOKEN**: Your API private token (available in your account settings https://gemnasium.com/settings)
  * **GEMNASIUM_IGNORED_PATHS**: A list of paths separated by "," where dependency files are ignored.
  * **GEMNASIUM_RAW_FORMAT**: Display API raw json output (for debug)
+ * **NETRC_PATH**: Location of your .netrc file (default: ~/.netrc)
 
  and env vars are overriden by command line options.
  Ex: 

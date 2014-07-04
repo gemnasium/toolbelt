@@ -1,3 +1,7 @@
+0.2.3 / unreleased
+
+* Fix login when .netrc file doesn't exist (#12)
+
 0.2.2 / 2014-07-02
 
 * Let the server decide when to end the job.

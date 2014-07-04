@@ -3,13 +3,39 @@ package auth
 import (
 	"bytes"
 	"encoding/json"
+	"fmt"
 	"net/http"
 	"net/http/httptest"
+	"os"
+	"path/filepath"
 	"testing"
 
 	"github.com/bgentry/go-netrc/netrc"
 	"github.com/gemnasium/toolbelt/config"
 )
+
+func TestLoadNetRCFileWithNonExistingFile(t *testing.T) {
+	f := filepath.Join(os.TempDir(), "netrctmpfile")
+	os.Setenv("NETRC_PATH", f)
+	if _, err := os.Stat(netrcPath()); err == nil {
+		fmt.Printf("%s temp file was not supposed to exist, deleting\n", f)
+		os.Remove(f)
+	}
+	netrc := loadNetrc()
+	os.Remove(f)
+	if netrc == nil {
+		t.Error("loadNetrc should not return nil")
+	}
+}
+
+func TestLoadNetRCFileWithNonExistingAndInvalidFile(t *testing.T) {
+	f := "/nonexistingpath/subpath/file"
+	os.Setenv("NETRC_PATH", f)
+	netrc := loadNetrc()
+	if netrc != nil {
+		t.Error("loadNetrc should return nil")
+	}
+}
 
 func TestLogin(t *testing.T) {
 	// Fake gemnasium api

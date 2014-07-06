@@ -32,8 +32,8 @@ func TestLoadNetRCFileWithNonExistingAndInvalidFile(t *testing.T) {
 	f := "/nonexistingpath/subpath/file"
 	os.Setenv("NETRC_PATH", f)
 	netrc := loadNetrc()
-	if netrc != nil {
-		t.Error("loadNetrc should return nil")
+	if netrc == nil {
+		t.Error("loadNetrc should not fail")
 	}
 }
 

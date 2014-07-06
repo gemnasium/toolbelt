@@ -6,14 +6,22 @@ import (
 	"github.com/gemnasium/toolbelt/utils"
 )
 
+var login = func() error {
+	return auth.Login()
+}
+
 // auth.Login wrapper with a cli.Content
 func Login(ctx *cli.Context) {
-	err := auth.Login()
-	utils.ExitWithError(err)
+	err := login()
+	utils.ExitIfErr(err)
+}
+
+var logout = func() error {
+	return auth.Logout()
 }
 
 // auth.Logout wrapper with a cli.Content
 func Logout(ctx *cli.Context) {
-	err := auth.Logout()
-	utils.ExitWithError(err)
+	err := logout()
+	utils.ExitIfErr(err)
 }

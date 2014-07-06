@@ -1,3 +1,7 @@
+X.X.X / unreleased
+
+* Fix auth login and logout
+
 0.2.3 / 2014-07-04
 
 * Fix login when .netrc file doesn't exist (#12)

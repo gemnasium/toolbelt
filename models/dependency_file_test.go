@@ -61,6 +61,10 @@ func TestCheckFileSHA1(t *testing.T) {
 	if df.SHA != tf.SHA {
 		t.Errorf("DependencyFile has an invalid SHA (Exp: '%s', Got: '%s')\n", tf.SHA, df.SHA)
 	}
+
+	if err := df.CheckFileSHA1(); err != nil {
+		t.Fatal(err)
+	}
 }
 
 func TestPatch(t *testing.T) {

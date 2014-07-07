@@ -32,6 +32,19 @@ func TestListDependencies(t *testing.T) {
     },
     {
         "package": {
+            "name": "activerecord",
+            "slug": "gems/activerecord",
+            "type": "rubygem"
+        },
+        "requirement": "=3.1.12",
+        "locked": "3.1.12",
+        "type": "development",
+        "first_level": false,
+        "color": "red",
+		"advisories": [ { "id": 1 }, { "id": 2 }]
+    },
+    {
+        "package": {
             "name": "rails",
             "slug": "gems/rails",
             "type": "rubygem"
@@ -56,14 +69,14 @@ func TestListDependencies(t *testing.T) {
 	io.Copy(&buf, r)
 	os.Stdout = old // restoring the real stdout
 
-	expectedOutput :=
-		`+---------------+--------------+--------+--------+------------+
-| DEPENDENCIES  | REQUIREMENTS | LOCKED | STATUS | ADVISORIES |
-+---------------+--------------+--------+--------+------------+
-| gemnasium-gem | >=1.0.0      |        | green  |            |
-| rails         | =3.1.12      |        | red    |            |
-+---------------+--------------+--------+--------+------------+
-`
+	expectedOutput := "+------------------+--------------+--------+--------+------------+\n"
+	expectedOutput += "|   DEPENDENCIES   | REQUIREMENTS | LOCKED | STATUS | ADVISORIES |\n"
+	expectedOutput += "+------------------+--------------+--------+--------+------------+\n"
+	expectedOutput += "| gemnasium-gem    | >=1.0.0      | 2.0.0  | green  |            |\n"
+	expectedOutput += "| +-- activerecord | =3.1.12      | 3.1.12 | red    | 1, 2       |\n"
+	expectedOutput += "| rails            | =3.1.12      | 3.1.12 | red    |            |\n"
+	expectedOutput += "+------------------+--------------+--------+--------+------------+\n"
+
 	if buf.String() != expectedOutput {
 		t.Errorf("Expected ouput:\n%s\n\nGot:\n%s", expectedOutput, buf.String())
 	}

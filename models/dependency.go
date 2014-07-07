@@ -12,7 +12,7 @@ import (
 
 type Dependency struct {
 	Requirement   string     `json:"requirement"`
-	LockedVersion string     `json:"locked_version"`
+	LockedVersion string     `json:"locked"`
 	Package       Package    `json:"package"`
 	Type          string     `json:"type"`
 	FirstLevel    bool       `json:"first_level"`

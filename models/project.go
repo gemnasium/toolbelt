@@ -239,11 +239,7 @@ func (p *Project) Fetch() error {
 		URI:    fmt.Sprintf("/projects/%s", p.Slug),
 		Result: p,
 	}
-	err := gemnasium.APIRequest(opts)
-	if err != nil {
-		return err
-	}
-	return nil
+	return gemnasium.APIRequest(opts)
 }
 
 func (p *Project) Dependencies() (deps []Dependency, err error) {
@@ -253,7 +249,7 @@ func (p *Project) Dependencies() (deps []Dependency, err error) {
 		Result: &deps,
 	}
 	err = gemnasium.APIRequest(opts)
-	return deps, nil
+	return deps, err
 }
 
 // Fetch and return the dependency files ([]DependecyFile) for the current project

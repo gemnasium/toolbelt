@@ -196,6 +196,9 @@ func PushDependencyFiles(projectSlug string) error {
 		Result: &jsonResp,
 	}
 	err = gemnasium.APIRequest(opts)
+	if err != nil {
+		return err
+	}
 
 	added := []string{}
 	for _, df := range jsonResp["added"] {

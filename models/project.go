@@ -187,7 +187,7 @@ func CreateProject(projectName string, r io.Reader) error {
 		return err
 	}
 	fmt.Printf("Project '%s' created: https://gemnasium.com/%s (Remaining slots: %v)\n", project.Name, jsonResp["slug"], jsonResp["remaining_slot_count"])
-	fmt.Printf("To configure this project, use the following command:\ngemnasium projects configure %s\n", jsonResp["slug"])
+	fmt.Printf("To configure this project, use the following command:\ngemnasium configure %s\n", jsonResp["slug"])
 	return nil
 }
 

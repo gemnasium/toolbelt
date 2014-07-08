@@ -1,6 +1,7 @@
 package models
 
 import (
+	"bufio"
 	"bytes"
 	"encoding/json"
 	"errors"
@@ -150,10 +151,9 @@ func CreateProject(projectName string, r io.Reader) error {
 		}
 	}
 	fmt.Printf("Enter project description: ")
-	_, err := fmt.Fscanf(r, "%s", &project.Description)
-	if err != nil {
-		return err
-	}
+	scanner := bufio.NewScanner(r)
+	scanner.Scan()
+	project.Description = scanner.Text()
 	fmt.Println("") // quickfix for goconvey
 
 	projectAsJson, err := json.Marshal(project)

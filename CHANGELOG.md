@@ -1,6 +1,8 @@
-X.X.X / unreleased
+0.2.4 / 2014-07-15
 
 * Fix auth login and logout
+* Fix project description with several words (#14)
+* Improve test suite and code coverage
 
 0.2.3 / 2014-07-04
 

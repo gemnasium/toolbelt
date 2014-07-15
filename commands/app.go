@@ -10,7 +10,7 @@ func App() (*cli.App, error) {
 	app := cli.NewApp()
 	app.Name = "gemnasium"
 	app.Usage = "Gemnasium toolbelt"
-	app.Version = "0.2.3"
+	app.Version = "0.2.4"
 	app.Author = "Gemnasium"
 	app.Email = "support@gemnasium.com"
 	app.Flags = []cli.Flag{

@@ -8,16 +8,18 @@ import (
 	"github.com/gemnasium/toolbelt/utils"
 )
 
-func Configure(ctx *cli.Context) {
+var confFunc = func(project *models.Project) error {
 	f, err := os.Create(".gemnasium.yml")
 	utils.ExitIfErr(err)
 	defer f.Close()
+	return project.Configure(project.Slug, os.Stdin, f)
+}
 
+func Configure(ctx *cli.Context) {
 	slug := ctx.Args().First()
 	project, err := models.GetProject(slug)
 	utils.ExitIfErr(err)
 
-	// TODO: slug can be empty
-	err = project.Configure(project.Slug, os.Stdin, f)
+	err = confFunc(project)
 	utils.ExitIfErr(err)
 }

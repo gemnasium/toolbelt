@@ -26,7 +26,10 @@ const (
 // their color.
 func LiveEvaluation(files []string) error {
 
-	dfiles := models.LookupDependencyFiles(files)
+	dfiles, err := models.LookupDependencyFiles(files)
+	if err != nil {
+		return err
+	}
 
 	requestDeps := map[string][]*models.DependencyFile{"dependency_files": dfiles}
 	var jsonResp map[string]interface{}
@@ -37,7 +40,7 @@ func LiveEvaluation(files []string) error {
 		Body:   requestDeps,
 		Result: &jsonResp,
 	}
-	err := gemnasium.APIRequest(opts)
+	err = gemnasium.APIRequest(opts)
 	if err != nil {
 		return err
 	}

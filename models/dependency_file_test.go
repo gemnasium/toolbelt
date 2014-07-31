@@ -211,15 +211,15 @@ func TestPushDependencyFiles(t *testing.T) {
 	os.Stdout = w
 	config.APIEndpoint = ts.URL
 
-	getLocalDependencyFiles = func() ([]DependencyFile, error) {
-		return []DependencyFile{
-			DependencyFile{Path: "Gemfile", SHA: "Gemfile SHA-1", Content: []byte("Gemfile.lock base64 encoded content")},
-			DependencyFile{Path: "Gemfile.lock", SHA: "Gemfile.lock SHA-1", Content: []byte("Gemfile base64 encoded content")},
-			DependencyFile{Path: "js/package.json", SHA: "package.json SHA-1", Content: []byte("package.json content")},
+	getLocalDependencyFiles = func() ([]*DependencyFile, error) {
+		return []*DependencyFile{
+			&DependencyFile{Path: "Gemfile", SHA: "Gemfile SHA-1", Content: []byte("Gemfile.lock base64 encoded content")},
+			&DependencyFile{Path: "Gemfile.lock", SHA: "Gemfile.lock SHA-1", Content: []byte("Gemfile base64 encoded content")},
+			&DependencyFile{Path: "js/package.json", SHA: "package.json SHA-1", Content: []byte("package.json content")},
 		}, nil
 	}
 
-	err := PushDependencyFiles("blah")
+	err := PushDependencyFiles("blah", []string{})
 	if err != nil {
 		t.Error(err)
 	}

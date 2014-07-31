@@ -25,19 +25,10 @@ const (
 // will return 2 stases (color for Runtime / Dev.) and the list of deps with
 // their color.
 func LiveEvaluation(files []string) error {
-	// Create an array with files content
-	depFiles := make([]models.DependencyFile, len(files))
-	for i, file := range files {
-		depFile := models.DependencyFile{Path: file}
-		content, err := ioutil.ReadFile(file)
-		if err != nil {
-			return err
-		}
-		depFile.Content = content
-		depFiles[i] = depFile
-	}
 
-	requestDeps := map[string][]models.DependencyFile{"dependency_files": depFiles}
+	dfiles := models.LookupDependencyFiles(files)
+
+	requestDeps := map[string][]*models.DependencyFile{"dependency_files": dfiles}
 	var jsonResp map[string]interface{}
 
 	opts := &gemnasium.APIRequestOptions{

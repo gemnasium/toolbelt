@@ -122,10 +122,13 @@ func App() (*cli.App, error) {
 					Action:    DependencyFilesList,
 				},
 				{
-					Name:        "push",
-					ShortName:   "p",
-					Usage:       "Push dependency files on Gemnasium",
-					Description: "All dependency files supported by Gemnasium found in the current path will be sent to Gemnasium API. You can ignore paths with GEMNASIUM_IGNORED_PATHS",
+					Name:      "push",
+					ShortName: "p",
+					Usage:     "Push dependency files on Gemnasium",
+					Flags: []cli.Flag{
+						cli.StringFlag{"files, f", "", "list of files to send, separated with a comma."},
+					},
+					Description: "Send files to Gemnasium. If --files is not set, all dependency files supported by Gemnasium found in the current path will be sent to Gemnasium API. You can ignore paths with GEMNASIUM_IGNORED_PATHS",
 					Action:      DependenciesPush,
 				},
 			},

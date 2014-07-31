@@ -185,7 +185,11 @@ var getLocalDependencyFiles = func() ([]*DependencyFile, error) {
 // Push project dependencies
 // The current path will be scanned for supported dependency files (SUPPORTED_DEPENDENCY_FILES)
 func PushDependencyFiles(projectSlug string, files []string) error {
-	dfiles := LookupDependencyFiles(files)
+	dfiles, err := LookupDependencyFiles(files)
+	if err != nil {
+		return err
+	}
+
 	var jsonResp map[string][]DependencyFile
 
 	opts := &gemnasium.APIRequestOptions{
@@ -194,7 +198,7 @@ func PushDependencyFiles(projectSlug string, files []string) error {
 		Body:   dfiles,
 		Result: &jsonResp,
 	}
-	err := gemnasium.APIRequest(opts)
+	err = gemnasium.APIRequest(opts)
 	if err != nil {
 		return err
 	}
@@ -224,20 +228,23 @@ func PushDependencyFiles(projectSlug string, files []string) error {
 
 // Load dependency files if files is not empty, otherwise search in the current
 // path for files
-func LookupDependencyFiles(files []string) []*DependencyFile {
+func LookupDependencyFiles(files []string) ([]*DependencyFile, error) {
 	var dfiles = []*DependencyFile{}
 
 	if len(files) > 0 {
 		for _, path := range files {
-			dfiles = append(dfiles, NewDependencyFile(path))
+			df := NewDependencyFile(path)
+			if df == nil {
+				return nil, fmt.Errorf("Unable to read file: %s", path)
+			}
+			dfiles = append(dfiles, df)
 		}
-
 	} else {
 		files, err := getLocalDependencyFiles()
 		if err != nil {
-			fmt.Println(err)
+			return nil, err
 		}
 		dfiles = files
 	}
-	return dfiles
+	return dfiles, nil
 }

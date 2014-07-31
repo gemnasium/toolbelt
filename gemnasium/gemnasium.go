@@ -9,6 +9,7 @@ import (
 	"net/http"
 
 	"github.com/gemnasium/toolbelt/config"
+	"github.com/gemnasium/toolbelt/utils"
 )
 
 type APIRequestOptions struct {
@@ -32,9 +33,7 @@ func APIRequest(opts *APIRequestOptions) error {
 		reqBody = bytes.NewReader(JSON)
 	}
 
-	req, err := http.NewRequest(opts.Method, url, reqBody)
-	req.SetBasicAuth("x", config.APIKey)
-	req.Header.Add("Content-Type", "application/json")
+	req, err := utils.NewAPIRequest(opts.Method, url, config.APIKey, reqBody)
 	if err != nil {
 		return err
 	}

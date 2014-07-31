@@ -15,14 +15,13 @@ import (
 	"strings"
 	"time"
 
+	"github.com/gemnasium/toolbelt/config"
 	"github.com/gemnasium/toolbelt/gemnasium"
 	"github.com/gemnasium/toolbelt/models"
+	"github.com/gemnasium/toolbelt/utils"
 )
 
 const (
-	ENV_GEMNASIUM_TESTSUITE = "GEMNASIUM_TESTSUITE"
-	ENV_BRANCH              = "BRANCH"
-	ENV_REVISION            = "REVISION"
 	AUTOUPDATE_MAX_DURATION = 3600
 	UPDATE_SET_INVALID      = "invalid"
 	UPDATE_SET_SUCCESS      = "test_passed"
@@ -55,8 +54,8 @@ type UpdateSetResult struct {
 
 // Download and loop over update sets, apply changes, run test suite, and finally notify gemnasium
 func Run(projectSlug string, testSuite []string) error {
-	if envTS := os.Getenv(ENV_GEMNASIUM_TESTSUITE); envTS != "" {
-		testSuite = strings.Fields(os.Getenv(ENV_GEMNASIUM_TESTSUITE))
+	if envTS := os.Getenv(config.ENV_GEMNASIUM_TESTSUITE); envTS != "" {
+		testSuite = strings.Fields(envTS)
 	}
 	if len(testSuite) == 0 {
 		return errors.New("Arg [testSuite] can't be empty")
@@ -143,14 +142,14 @@ func Run(projectSlug string, testSuite []string) error {
 }
 
 func fetchUpdateSet(projectSlug string) (*UpdateSet, error) {
-	revision := getCurrentRevision()
+	revision := utils.GetCurrentRevision()
 	if revision == "" {
 		return nil, errors.New("Can't determine current revision, please use REVISION env var to specify it")
 	}
 	var updateSet *UpdateSet
 	opts := &gemnasium.APIRequestOptions{
 		Method: "POST",
-		URI:    fmt.Sprintf("/projects/%s/branches/%s/update_sets/next", projectSlug, getCurrentBranch()),
+		URI:    fmt.Sprintf("/projects/%s/branches/%s/update_sets/next", projectSlug, utils.GetCurrentBranch()),
 		Body:   &map[string]string{"revision": revision},
 		Result: &updateSet,
 	}
@@ -204,7 +203,7 @@ func pushUpdateSetResult(rs *UpdateSetResult) error {
 
 	opts := &gemnasium.APIRequestOptions{
 		Method: "PATCH",
-		URI:    fmt.Sprintf("/projects/%s/branches/%s/update_sets/%d", rs.ProjectSlug, getCurrentBranch(), rs.UpdateSetID),
+		URI:    fmt.Sprintf("/projects/%s/branches/%s/update_sets/%d", rs.ProjectSlug, utils.GetCurrentBranch(), rs.UpdateSetID),
 		Body:   rs,
 	}
 	err := gemnasium.APIRequest(opts)
@@ -214,38 +213,6 @@ func pushUpdateSetResult(rs *UpdateSetResult) error {
 
 	fmt.Printf("done\n")
 	return nil
-}
-
-// Return the current branch name, using git.
-// If the env var "BRANCH" is declared, its value is returned diretly
-func getCurrentBranch() string {
-	if envBranch := os.Getenv(ENV_BRANCH); envBranch != "" {
-		return envBranch
-	}
-	out, err := exec.Command(gitPath(), "rev-parse", "--abbrev-ref", "HEAD").Output()
-	if err != nil {
-		return "master"
-	}
-	return strings.TrimSpace(string(out))
-}
-
-// return the current commit sha, using git
-// If the env var "REVISION" is specified, its value is returned directly
-func getCurrentRevision() string {
-	if envRevision := os.Getenv(ENV_REVISION); envRevision != "" {
-		return envRevision
-	}
-	out, err := exec.Command(gitPath(), "rev-parse", "--verify", "HEAD").Output()
-	if err != nil {
-		return ""
-	}
-	return strings.TrimSpace(string(out))
-}
-
-// Lookup for "git" in $PATH
-func gitPath() string {
-	path, _ := exec.LookPath("git")
-	return path
 }
 
 // Restore original files.

@@ -6,7 +6,10 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"os/exec"
+	"strings"
 
+	"github.com/gemnasium/toolbelt/config"
 	"github.com/mgutz/ansi"
 	"github.com/wsxiaoys/terminal/color"
 )
@@ -31,6 +34,9 @@ func NewAPIRequest(method, urlStr, APIKey string, body io.Reader) (*http.Request
 	}
 	req.SetBasicAuth("x", APIKey)
 	req.Header.Add("Content-Type", "application/json")
+	req.Header.Add("X-Gms-Client-Version", config.VERSION)
+	req.Header.Add("X-Gms-Revision", GetCurrentRevision())
+	req.Header.Add("X-Gms-Branch", GetCurrentBranch())
 	return req, nil
 }
 
@@ -60,4 +66,36 @@ func ExitIfErr(err error) {
 func ExitWithError(err error) {
 	color.Println("@{r!}" + err.Error())
 	os.Exit(1)
+}
+
+// return the current commit sha, using git
+// If the env var "REVISION" is specified, its value is returned directly
+func GetCurrentRevision() string {
+	if envRevision := os.Getenv(config.ENV_REVISION); envRevision != "" {
+		return envRevision
+	}
+	out, err := exec.Command(GitPath(), "rev-parse", "--verify", "HEAD").Output()
+	if err != nil {
+		return ""
+	}
+	return strings.TrimSpace(string(out))
+}
+
+// Return the current branch name, using git.
+// If the env var "BRANCH" is declared, its value is returned diretly
+func GetCurrentBranch() string {
+	if envBranch := os.Getenv(config.ENV_BRANCH); envBranch != "" {
+		return envBranch
+	}
+	out, err := exec.Command(GitPath(), "rev-parse", "--abbrev-ref", "HEAD").Output()
+	if err != nil {
+		return "master"
+	}
+	return strings.TrimSpace(string(out))
+}
+
+// Lookup for "git" in $PATH
+func GitPath() string {
+	path, _ := exec.LookPath("git")
+	return path
 }

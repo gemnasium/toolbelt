@@ -14,8 +14,14 @@ func App() (*cli.App, error) {
 	app.Author = "Gemnasium"
 	app.Email = "support@gemnasium.com"
 	app.Flags = []cli.Flag{
-		cli.StringFlag{"token, t", "", "Your api token (available in your account page)"},
-		cli.BoolFlag{"raw, r", "Raw format output"},
+		cli.StringFlag{
+			Name:  "token, t",
+			Usage: "Your api token (available in your account page)",
+		},
+		cli.BoolFlag{
+			Name:  "raw, r",
+			Usage: "Raw format output",
+		},
 	}
 	app.Before = func(c *cli.Context) error {
 		config.RawFormat = c.Bool("raw")
@@ -55,7 +61,10 @@ func App() (*cli.App, error) {
 					ShortName: "l",
 					Usage:     "List projects on Gemnasium",
 					Flags: []cli.Flag{
-						cli.BoolFlag{"private, p", "Display only private projects"},
+						cli.BoolFlag{
+							Name:  "private, p",
+							Usage: "Display only private projects",
+						},
 					},
 					Action: ProjectsList,
 				},
@@ -69,9 +78,18 @@ func App() (*cli.App, error) {
 					Name:      "update",
 					ShortName: "u",
 					Flags: []cli.Flag{
-						cli.StringFlag{"name, n", "", "Project name"},
-						cli.StringFlag{"desc, d", "", "A short description"},
-						cli.BoolFlag{"monitored, m", "Whether the project is watched by the user. "},
+						cli.StringFlag{
+							Name:  "name, n",
+							Usage: "Project name",
+						},
+						cli.StringFlag{
+							Name:  "desc, d",
+							Usage: "A short description",
+						},
+						cli.BoolFlag{
+							Name:  "monitored, m",
+							Usage: "Whether the project is watched by the user.",
+						},
 					},
 					Usage:  "Edit project details",
 					Action: ProjectsUpdate,
@@ -126,7 +144,10 @@ func App() (*cli.App, error) {
 					ShortName: "p",
 					Usage:     "Push dependency files on Gemnasium",
 					Flags: []cli.Flag{
-						cli.StringFlag{"files, f", "", "list of files to send, separated with a comma."},
+						cli.StringFlag{
+							Name:  "files, f",
+							Usage: "list of files to send, separated with a comma.",
+						},
 					},
 					Description: "Send files to Gemnasium. If --files is not set, all dependency files supported by Gemnasium found in the current path will be sent to Gemnasium API. You can ignore paths with GEMNASIUM_IGNORED_PATHS",
 					Action:      DependenciesPush,
@@ -155,7 +176,10 @@ func App() (*cli.App, error) {
 			ShortName: "e",
 			Usage:     "Live deps evaluation",
 			Flags: []cli.Flag{
-				cli.StringFlag{"files, f", "", "list of files to evaluate, separated with a comma."},
+				cli.StringFlag{
+					Name:  "files, f",
+					Usage: "list of files to evaluate, separated with a comma.",
+				},
 			},
 			Action: LiveEvaluation,
 		},
@@ -164,7 +188,10 @@ func App() (*cli.App, error) {
 			ShortName: "au",
 			Usage:     "Auto-update will test updates in your project, and notify Gemnasium of the result",
 			Flags: []cli.Flag{
-				cli.StringFlag{"project, p", "", "Project slug (identifier on Gemnasium)"},
+				cli.StringFlag{
+					Name:  "project, p",
+					Usage: "Project slug (identifier on Gemnasium)",
+				},
 			},
 			Description: `Auto-Update will fetch update sets from Gemnasium and run your test suite against them.
    The test suite can be passed as arguments, or through the env var GEMNASIUM_TESTSUITE.

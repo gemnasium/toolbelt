@@ -10,8 +10,7 @@ import (
 )
 
 var (
-	APIEndpoint   = DEFAULT_API_ENDPOINT
-	ProjectBranch = DEFAULT_PROJECT_BRANCH
+	APIEndpoint = DEFAULT_API_ENDPOINT
 	APIKey,
 	ProjectSlug string
 	IgnoredPaths []string
@@ -22,18 +21,19 @@ const (
 	VERSION          = "0.2.5"
 	CONFIG_FILE_PATH = ".gemnasium.yml"
 
-	ENV_API_ENDDPOINT       = "GEMNASIUM_API_ENDPOINT"
-	ENV_TOKEN               = "GEMNASIUM_TOKEN"
-	ENV_PROJECT_SLUG        = "GEMNASIUM_PROJECT_SLUG"
-	ENV_PROJECT_BRANCH      = "GEMNASIUM_PROJECT_BRANCH"
-	ENV_IGNORED_PATHS       = "GEMNASIUM_IGNORED_PATHS"
-	ENV_RAW_FORMAT          = "GEMNASIUM_RAW_FORMAT"
-	ENV_GEMNASIUM_TESTSUITE = "GEMNASIUM_TESTSUITE"
-	ENV_BRANCH              = "BRANCH"
-	ENV_REVISION            = "REVISION"
+	// Don't forget to update DisplayEnvVars func bellow when updating vars
+	ENV_API_ENDDPOINT                = "GEMNASIUM_API_ENDPOINT"
+	ENV_TOKEN                        = "GEMNASIUM_TOKEN"
+	ENV_PROJECT_SLUG                 = "GEMNASIUM_PROJECT_SLUG"
+	ENV_BRANCH                       = "BRANCH"
+	ENV_REVISION                     = "REVISION"
+	ENV_IGNORED_PATHS                = "GEMNASIUM_IGNORED_PATHS"
+	ENV_RAW_FORMAT                   = "GEMNASIUM_RAW_FORMAT"
+	ENV_GEMNASIUM_TESTSUITE          = "GEMNASIUM_TESTSUITE"
+	ENV_GEMNASIUM_BUNDLE_INSTALL_CMD = "GEMNASIUM_BUNDLE_INSTALL_CMD"
+	ENV_GEMNASIUM_BUNDLE_UPDATE_CMD  = "GEMNASIUM_BUNDLE_UPDATE_CMD"
 
-	DEFAULT_API_ENDPOINT   = "https://api.gemnasium.com/v1"
-	DEFAULT_PROJECT_BRANCH = "master"
+	DEFAULT_API_ENDPOINT = "https://api.gemnasium.com/v1"
 )
 
 func init() {
@@ -71,9 +71,6 @@ func loadConfig() {
 	if project_slug, ok := c["project_slug"]; ok {
 		ProjectSlug = project_slug.(string)
 	}
-	if project_branch, ok := c["project_branch"]; ok {
-		ProjectBranch = project_branch.(string)
-	}
 	if ignored_paths, ok := c["ignored_paths"]; ok {
 		for _, ip := range ignored_paths.([]interface{}) {
 			IgnoredPaths = append(IgnoredPaths, ip.(string))
@@ -85,11 +82,28 @@ func loadEnv() {
 	APIEndpoint = getEnvOrElse(ENV_API_ENDDPOINT, APIEndpoint)
 	APIKey = getEnvOrElse(ENV_TOKEN, APIKey)
 	ProjectSlug = getEnvOrElse(ENV_PROJECT_SLUG, ProjectSlug)
-	ProjectBranch = getEnvOrElse(ENV_PROJECT_BRANCH, ProjectBranch)
 	if ip := os.Getenv(ENV_IGNORED_PATHS); ip != "" {
 		IgnoredPaths = strings.Split(ip, ",")
 	}
 	if raw := os.Getenv(ENV_RAW_FORMAT); raw != "" {
 		RawFormat = true
+	}
+}
+
+func DisplayEnvVars() {
+	vars := map[string]string{
+		ENV_API_ENDDPOINT:                "API URL (only used for debugging).",
+		ENV_TOKEN:                        "Your private API token.",
+		ENV_PROJECT_SLUG:                 "The project slug (unique identifier). Use `gemnasium projects list`, or the project settings page to get it.",
+		ENV_BRANCH:                       "Current branch.",
+		ENV_REVISION:                     "Current revision.",
+		ENV_IGNORED_PATHS:                "When using the 'eval' or 'df push' commands, if --files is empty, gemnasium will look for files locally. Paths to be ignored can be set with this var, separated with a comma.",
+		ENV_RAW_FORMAT:                   "Display raw json response from API server.",
+		ENV_GEMNASIUM_TESTSUITE:          "Used for auto-update command, to set the testsuite to run.",
+		ENV_GEMNASIUM_BUNDLE_INSTALL_CMD: "[auto-update] Override command used with ruby sets. default: 'bundle install'",
+		ENV_GEMNASIUM_BUNDLE_UPDATE_CMD:  "[auto-update] Override command used with ruby sets. default: 'bundle update'",
+	}
+	for k, _ := range vars {
+		fmt.Printf("%s=%s\n", k, os.Getenv(k))
 	}
 }

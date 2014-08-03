@@ -175,7 +175,7 @@ func App() (*cli.App, error) {
 
    Env Vars:
 
-   - GEMNASIUM_PROJECT_SLUG: override --project flag and project_slug in .gemnasium.yml.
+   - GEMNASIUM_PROJECT_SLUG: override --project flag and project_slug in .gemnasium.yyml.
    - GEMNASIUM_TESTSUITE: will be run for each iteration over update sets. This is typically your test suite script.
    - GEMNASIUM_BUNDLE_INSTALL_CMD: [Ruby Only] during each iteration, the new bundle will be installed. Default: "bundle install"
    - GEMNASIUM_BUNDLE_UPDATE_CMD: [Ruby Only] during each iteration, some gems might be updated. This command will be used. Default: "bundle update"
@@ -189,6 +189,11 @@ func App() (*cli.App, error) {
    - gemnasium autoupdate my_project_slug bundle exec rake
   `,
 			Action: AutoUpdate,
+		},
+		{
+			Name:   "env",
+			Usage:  "Display ENV vars used by gemnasium",
+			Action: DisplayEnvVars,
 		},
 	}
 	return app, nil

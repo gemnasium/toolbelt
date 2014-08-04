@@ -3,22 +3,29 @@ package utils
 import (
 	"io"
 	"io/ioutil"
+	"os"
 	"strings"
 	"testing"
+
+	"github.com/gemnasium/toolbelt/config"
 )
 
 func TestNewAPIRequest(t *testing.T) {
 	r := strings.NewReader("testing string")
 	var tt = []struct {
-		Method string
-		UrlStr string
-		APIKey string
-		Body   io.Reader
+		Method   string
+		UrlStr   string
+		APIKey   string
+		Body     io.Reader
+		Revision string
+		Branch   string
 	}{
-		{"GET", "http://localhost/api", "secretkey", nil},
-		{"POST", "https://localhost/api", "secretkey", r},
+		{"GET", "http://localhost/api", "secretkey", nil, "abcdef123456", "master"},
+		{"POST", "https://localhost/api", "secretkey", r, "abcdef123456", "develop"},
 	}
 	for _, testReq := range tt {
+		os.Setenv(config.ENV_REVISION, testReq.Revision)
+		os.Setenv(config.ENV_BRANCH, testReq.Branch)
 		req, err := NewAPIRequest(testReq.Method, testReq.UrlStr, testReq.APIKey, testReq.Body)
 		if err != nil {
 			t.Error(err)
@@ -42,6 +49,15 @@ func TestNewAPIRequest(t *testing.T) {
 			if string(body) != "testing string" {
 				t.Errorf("Body should be \"testing string\", got: %s", body)
 			}
+		}
+		if req.Header["X-Gms-Client-Version"][0] != config.VERSION {
+			t.Errorf("X-Gms-Client-Version should be \"%s\", got: %s", config.VERSION, req.Header["X-Gms-Client-Version"])
+		}
+		if req.Header["X-Gms-Revision"][0] != testReq.Revision {
+			t.Errorf("X-Gms-Revision should be \"%s\", got: %s", testReq.Revision, req.Header["X-Gms-Revision"])
+		}
+		if req.Header["X-Gms-Branch"][0] != testReq.Branch {
+			t.Errorf("X-Gms-Branch should be \"%s\", got: %s", testReq.Branch, req.Header["X-Gms-Branch"])
 		}
 	}
 }

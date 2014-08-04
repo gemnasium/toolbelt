@@ -12,6 +12,7 @@ import (
 	"regexp"
 	"strings"
 
+	"github.com/gemnasium/toolbelt/config"
 	"github.com/gemnasium/toolbelt/gemnasium"
 	"github.com/olekukonko/tablewriter"
 )
@@ -151,14 +152,29 @@ func ListDependencyFiles(project *Project) error {
 	return nil
 }
 
-var getLocalDependencyFiles = func() ([]DependencyFile, error) {
-	dfiles := []DependencyFile{}
+var getLocalDependencyFiles = func() ([]*DependencyFile, error) {
+	dfiles := []*DependencyFile{}
 	searchDeps := func(path string, info os.FileInfo, err error) error {
 
 		// Skip excluded paths
 		if info.IsDir() && info.Name() == ".git" {
 			return filepath.SkipDir
 		}
+		// Skip ignored_pathes
+		if len(config.IgnoredPaths) > 0 {
+			for _, path := range config.IgnoredPaths {
+				matched, err := filepath.Match(filepath.Clean(path), info.Name())
+				if err != nil {
+					return err
+				}
+
+				if matched {
+					fmt.Println("Skipping", info.Name())
+					return filepath.SkipDir
+				}
+			}
+		}
+
 		matched, err := regexp.MatchString(SUPPORTED_DEPENDENCY_FILES, info.Name())
 		if err != nil {
 			return err
@@ -166,27 +182,26 @@ var getLocalDependencyFiles = func() ([]DependencyFile, error) {
 
 		if matched {
 			fmt.Printf("Found: %s\n", path)
-			content, err := ioutil.ReadFile(path)
-			if err != nil {
-				return err
-			}
-
-			dfiles = append(dfiles, DependencyFile{Path: info.Name(), SHA: "sha", Content: content})
+			dfiles = append(dfiles, NewDependencyFile(path))
 		}
 		return nil
 	}
-	filepath.Walk(".", searchDeps)
+	err := filepath.Walk(".", searchDeps)
+	if err != nil {
+		return dfiles, err
+	}
 	return dfiles, nil
 }
 
 // Push project dependencies
 // The current path will be scanned for supported dependency files (SUPPORTED_DEPENDENCY_FILES)
-func PushDependencyFiles(projectSlug string) error {
-	dfiles, err := getLocalDependencyFiles()
+func PushDependencyFiles(projectSlug string, files []string) error {
+	dfiles, err := LookupDependencyFiles(files)
 	if err != nil {
 		return err
 	}
 
+	fmt.Printf("Sending files to Gemnasium: ")
 	var jsonResp map[string][]DependencyFile
 
 	opts := &gemnasium.APIRequestOptions{
@@ -216,9 +231,34 @@ func PushDependencyFiles(projectSlug string) error {
 	for _, df := range jsonResp["unsupported"] {
 		unsupported = append(unsupported, df.Path)
 	}
+	fmt.Printf("done.\n\n")
 	fmt.Printf("Added: %s\n", strings.Join(added, ", "))
 	fmt.Printf("Updated: %s\n", strings.Join(updated, ", "))
 	fmt.Printf("Unchanged: %s\n", strings.Join(unchanged, ", "))
 	fmt.Printf("Unsupported: %s\n", strings.Join(unsupported, ", "))
 	return nil
+}
+
+// Load dependency files if files is not empty, otherwise search in the current
+// path for files
+func LookupDependencyFiles(files []string) ([]*DependencyFile, error) {
+	var dfiles = []*DependencyFile{}
+
+	if len(files) > 0 {
+		for _, path := range files {
+			df := NewDependencyFile(path)
+			if df == nil {
+				return nil, fmt.Errorf("Unable to read file: %s", path)
+			}
+			dfiles = append(dfiles, df)
+		}
+	} else {
+		fmt.Println("[warning] No files given, scanning current directory instead.")
+		files, err := getLocalDependencyFiles()
+		if err != nil {
+			return nil, err
+		}
+		dfiles = files
+	}
+	return dfiles, nil
 }

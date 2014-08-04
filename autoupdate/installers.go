@@ -9,12 +9,12 @@ import (
 	"regexp"
 	"strings"
 
+	"github.com/gemnasium/toolbelt/config"
 	"github.com/gemnasium/toolbelt/models"
 )
 
 const (
-	ENV_GEMNASIUM_BUNDLE_INSTALL_CMD = "GEMNASIUM_BUNDLE_INSTALL_CMD"
-	BUNDLE_INSTALL_CMD               = "bundle install"
+	BUNDLE_INSTALL_CMD = "bundle install"
 )
 
 var (
@@ -43,7 +43,7 @@ func RubygemsInstaller(reqUpdates []RequirementUpdate, orgDepFiles, uptDepFiles 
 		}
 
 		bi := BUNDLE_INSTALL_CMD
-		if biCMDEnv := os.Getenv(ENV_GEMNASIUM_BUNDLE_INSTALL_CMD); biCMDEnv != "" {
+		if biCMDEnv := os.Getenv(config.ENV_GEMNASIUM_BUNDLE_INSTALL_CMD); biCMDEnv != "" {
 			bi = biCMDEnv
 		}
 		parts := strings.Fields(bi)

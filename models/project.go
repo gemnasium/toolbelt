@@ -192,7 +192,7 @@ func CreateProject(projectName string, r io.Reader) error {
 }
 
 // Create a project config gile (.gemnasium.yml)
-func (p *Project) Configure(slug string, r io.Reader, f *os.File) error {
+func (p *Project) Configure(slug string, r io.Reader, w io.Writer) error {
 	if slug == "" {
 		fmt.Printf("Enter project slug: ")
 		_, err := fmt.Scanln(&slug)
@@ -208,12 +208,11 @@ func (p *Project) Configure(slug string, r io.Reader, f *os.File) error {
 		log.Fatalf("error: %v", err)
 	}
 	// write content to the file
-	_, err = f.Write(body)
+	_, err = w.Write(body)
 	if err != nil {
 		return err
 	}
-	// Issue a Sync to flush writes to stable storage.
-	f.Sync()
+	color.Println("@gYour .gemnasium.yml was created!")
 	return nil
 }
 

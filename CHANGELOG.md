@@ -1,3 +1,10 @@
+0.2.5 / unreleased
+
+* Fix dependency files push (gemnasium df push)
+* Add a --files option to df push, and make "df push" and "eval" more consistent
+* Send Revision and Branch headers (required to use auto-update with local projects, not hosted on github)
+* New command: "env". Displays the env vars used by gemnasium
+
 0.2.4 / 2014-07-15
 
 * Fix auth login and logout

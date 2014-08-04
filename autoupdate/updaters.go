@@ -8,12 +8,12 @@ import (
 	"regexp"
 	"strings"
 
+	"github.com/gemnasium/toolbelt/config"
 	"github.com/gemnasium/toolbelt/models"
 )
 
 const (
-	BUNDLE_UPDATE_CMD               = "bundle update"
-	ENV_GEMNASIUM_BUNDLE_UPDATE_CMD = "GEMNASIUM_BUNDLE_UPDATE_CMD"
+	BUNDLE_UPDATE_CMD = "bundle update"
 )
 
 var (
@@ -46,7 +46,7 @@ func RubygemsUpdater(versionUpdates []VersionUpdate, orgDepFiles, uptDepFiles *[
 	*orgDepFiles = append(*orgDepFiles, *GemfileLock)
 
 	upt := BUNDLE_UPDATE_CMD
-	if uptEnv := os.Getenv(ENV_GEMNASIUM_BUNDLE_UPDATE_CMD); uptEnv != "" {
+	if uptEnv := os.Getenv(config.ENV_GEMNASIUM_BUNDLE_UPDATE_CMD); uptEnv != "" {
 		upt = uptEnv
 	}
 	parts := strings.Fields(upt)

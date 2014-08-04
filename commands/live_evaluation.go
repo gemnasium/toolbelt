@@ -11,9 +11,6 @@ import (
 
 func LiveEvaluation(ctx *cli.Context) {
 	auth.AttemptLogin(ctx)
-	if ctx.String("files") == "" {
-		cli.ShowCommandHelp(ctx, "eval")
-	}
 	files := strings.Split(ctx.String("files"), ",")
 	err := liveeval.LiveEvaluation(files)
 	utils.ExitIfErr(err)

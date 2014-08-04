@@ -9,16 +9,20 @@ import (
 )
 
 func DependencyFilesList(ctx *cli.Context) {
-	project, err := models.GetProject(ctx.Args().First())
+	project, err := models.GetProject()
 	utils.ExitIfErr(err)
 	err = models.ListDependencyFiles(project)
 	utils.ExitIfErr(err)
 }
 
 func DependenciesPush(ctx *cli.Context) {
-	project, err := models.GetProject(ctx.Args().First())
+	project, err := models.GetProject()
 	utils.ExitIfErr(err)
-	files := strings.Split(ctx.String("files"), ",")
+	var files []string
+	if ctx.IsSet("files") {
+		// Only call strings.Split on non-empty strings, otherwise len(strings) will be 1 instead of 0.
+		files = strings.Split(ctx.String("files"), ",")
+	}
 	err = models.PushDependencyFiles(project.Slug, files)
 	utils.ExitIfErr(err)
 }

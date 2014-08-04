@@ -162,7 +162,8 @@ var getLocalDependencyFiles = func() ([]*DependencyFile, error) {
 		}
 		// Skip ignored_pathes
 		if len(config.IgnoredPaths) > 0 {
-			if matched, _ := regexp.MatchString(os.Getenv(config.ENV_IGNORED_PATHS), info.Name()); matched {
+			if matched, _ := filepath.Match(filepath.Clean(os.Getenv(config.ENV_IGNORED_PATHS)), info.Name()); matched {
+				fmt.Println("Skipping", info.Name())
 				return filepath.SkipDir
 			}
 		}
@@ -190,6 +191,7 @@ func PushDependencyFiles(projectSlug string, files []string) error {
 		return err
 	}
 
+	fmt.Printf("Sending files to Gemnasium: ")
 	var jsonResp map[string][]DependencyFile
 
 	opts := &gemnasium.APIRequestOptions{
@@ -219,6 +221,7 @@ func PushDependencyFiles(projectSlug string, files []string) error {
 	for _, df := range jsonResp["unsupported"] {
 		unsupported = append(unsupported, df.Path)
 	}
+	fmt.Printf("done.\n\n")
 	fmt.Printf("Added: %s\n", strings.Join(added, ", "))
 	fmt.Printf("Updated: %s\n", strings.Join(updated, ", "))
 	fmt.Printf("Unchanged: %s\n", strings.Join(unchanged, ", "))
@@ -240,6 +243,7 @@ func LookupDependencyFiles(files []string) ([]*DependencyFile, error) {
 			dfiles = append(dfiles, df)
 		}
 	} else {
+		fmt.Println("[warning] No files given, scanning current directory instead.")
 		files, err := getLocalDependencyFiles()
 		if err != nil {
 			return nil, err

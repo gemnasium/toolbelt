@@ -1,0 +1,14 @@
+gemnasium-toolbelt (0.2.5-1) stable; urgency=low
+
+  * Fix dependency files push (gemnasium df push)
+  * Add a --files option to df push, and make "df push" and "eval" more consistent
+  * Send Revision and Branch headers (required to use auto-update with local projects, not hosted on github)
+  * New command: "env". Displays the env vars used by gemnasium
+
+ -- Gemnasium <info@gemnasium.com>  Mon, 04 Aug 2014 18:29:13 +0200
+
+gemnasium-toolbelt (0.2.4-1) stable; urgency=low
+
+  * Initial release
+
+ -- Gemnasium <info@gemnasium.com>  Wed, 16 Jul 2014 10:11:41 +0200

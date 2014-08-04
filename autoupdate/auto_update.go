@@ -79,6 +79,9 @@ func Run(projectSlug string, testSuite []string) error {
 		}
 		updateSet, err := fetchUpdateSet(projectSlug)
 		if err != nil {
+			if err.Error() == "Server returned non-200 status: 409 Conflict\n" {
+				fmt.Printf("The current revision (%s) is unknown on Gemnasium, please push your dependency files before running autoupdate.\nSee `gemnasium df help push`.\n", utils.GetCurrentRevision())
+			}
 			return err
 		}
 		if updateSet.ID == 0 {

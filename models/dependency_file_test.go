@@ -229,7 +229,10 @@ func TestPushDependencyFiles(t *testing.T) {
 	io.Copy(&buf, r)
 	os.Stdout = old // restoring the real stdout
 
-	expectedOutput := "Added: Gemfile, Gemfile.lock\n"
+	expectedOutput := "[warning] No files given, scanning current directory instead.\n"
+	expectedOutput += "Sending files to Gemnasium: done.\n"
+	expectedOutput += "\n"
+	expectedOutput += "Added: Gemfile, Gemfile.lock\n"
 	expectedOutput += "Updated: \n"
 	expectedOutput += "Unchanged: js/package.json\n"
 	expectedOutput += "Unsupported: \n"

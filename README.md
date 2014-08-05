@@ -21,6 +21,26 @@ Or you can build it yourself by running:
 
     go build -o gemnasium
 
+### Ubuntu and Debian
+
+#### Configure Gemnasium repository
+
+    sudo sh -c 'echo "deb http://apt.gemnasium.com stable main" > /etc/apt/sources.list.d/gemnasium.list'
+    
+#### Trust Gemnasium GPG key
+
+    sudo apt-key adv --recv-keys --keyserver keyserver.ubuntu.com E5CEAB0AC5F1CA2A
+    
+#### Update package list
+
+    sudo apt-get update
+    
+#### Install Gemnasium toolbelt
+
+    sudo apt-get install gemnasium-toolbelt
+
+The ```gemnasium``` command will be available in ```/usr/bin/gemnasium```
+
 ### From source
 
     go build -o gemnasium

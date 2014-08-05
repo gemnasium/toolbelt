@@ -35,6 +35,7 @@ type Project struct {
 	Color             string `json:"color,omitempty"`
 	Monitored         bool   `json:"monitored,omitempty"`
 	UnmonitoredReason string `json:"unmonitored_reason,omitempty"`
+	CommitSHA         string `json:"commit_sha"`
 }
 
 // List projects on gemnasium

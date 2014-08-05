@@ -52,8 +52,15 @@ type UpdateSetResult struct {
 	DependencyFiles []models.DependencyFile `json:"dependency_files"`
 }
 
+var ErrProjectRevisionEmpty error = fmt.Errorf("The current revision (%s) is unknown on Gemnasium, please push your dependency files before running autoupdate.\nSee `gemnasium df help push`.\n", utils.GetCurrentRevision())
+
 // Download and loop over update sets, apply changes, run test suite, and finally notify gemnasium
 func Run(projectSlug string, testSuite []string) error {
+	err := checkProject(projectSlug)
+	if err != nil {
+		return err
+	}
+
 	if envTS := os.Getenv(config.ENV_GEMNASIUM_TESTSUITE); envTS != "" {
 		testSuite = strings.Fields(envTS)
 	}
@@ -79,9 +86,6 @@ func Run(projectSlug string, testSuite []string) error {
 		}
 		updateSet, err := fetchUpdateSet(projectSlug)
 		if err != nil {
-			if err.Error() == "Server returned non-200 status: 409 Conflict\n" {
-				fmt.Printf("The current revision (%s) is unknown on Gemnasium, please push your dependency files before running autoupdate.\nSee `gemnasium df help push`.\n", utils.GetCurrentRevision())
-			}
 			return err
 		}
 		if updateSet.ID == 0 {
@@ -265,4 +269,16 @@ func executeTestSuite(ts []string) ([]byte, error) {
 	}
 	fmt.Printf("done (%fs)\n", time.Since(start).Seconds())
 	return out, err
+}
+
+func checkProject(slug string) error {
+	p := &models.Project{Slug: slug}
+	err := p.Fetch()
+	if err != nil {
+		return err
+	}
+	if p.CommitSHA == "" {
+		return ErrProjectRevisionEmpty
+	}
+	return nil
 }

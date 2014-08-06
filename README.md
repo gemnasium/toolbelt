@@ -16,11 +16,6 @@ And then
 
     brew install gemnasium-toolbelt
 
-If you don't want to use Homebrew, check out the Binaries section bellow.
-Or you can build it yourself by running:
-
-    go build -o gemnasium
-
 ### Ubuntu and Debian
 
 #### Configure Gemnasium repository

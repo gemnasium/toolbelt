@@ -4,7 +4,7 @@
 
 Gemnasium toolbelt is a CLI for the Gemnasium API.
 
-## How to install it ?
+## How to install it?
 
 ### On Mac OS X
 
@@ -46,7 +46,7 @@ The ```gemnasium``` command will be available in ```/usr/bin/gemnasium```
 
 Binaries are available in the [releases](https://github.com/gemnasium/toolbelt/releases) page.
 
-## How to use it ?
+## How to use it?
 
 ### Authentication
 
@@ -54,7 +54,7 @@ Gemnasium Toolbelt stores your Gemnasium API key into your .netrc file.
 
 To be logged in to Gemnasium, you need to run `gemnasium auth login` and enter your Gemnasium credentials.
 
-Alternatively, you can pass directly your API token to all commands with the option `--token` or the env var GEMNASIUM_TOKEN
+Alternatively, you can pass directly your API token to all commands with the option `--token` or the env var ```GEMNASIUM_TOKEN````.
 Your API token is available in your settings page (https://gemnasium.com/settings).
 
 ### Create a new project
@@ -134,7 +134,7 @@ To obtain the list of env vars used and set:
 
    gemnasium env
 
-### Need further help ?
+### Need further help?
 
 A full commands documentation is available by running
 

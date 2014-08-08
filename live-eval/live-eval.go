@@ -103,5 +103,10 @@ func LiveEvaluation(files []string) error {
 
 	// Display deps in an ascii table
 	models.RenderDepsAsTable(response.Result.Dependencies, os.Stdout)
+
+	if response.Result.RuntimeStatus == "red" {
+		return fmt.Errorf("There are important updates available.\n")
+	}
+
 	return nil
 }

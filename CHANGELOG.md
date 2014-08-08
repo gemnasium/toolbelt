@@ -1,3 +1,7 @@
+0.2.6 / unreleased
+
+* "liveeval" command now returns 1 if runtime status is red
+
 0.2.5 / 2014-08-05
 
 * Fix dependency files push (gemnasium df push)

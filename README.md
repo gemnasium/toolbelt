@@ -67,7 +67,7 @@ To create a new project on Gemnasium, you need to `cd` into your project directo
 
 If your project is already on Gemnasium, you need to `cd` into your project directory and run
 
-    gemnasium projects configure
+    gemnasium configure [project_slug]
 
 You will need your project's Slug (available in your project page settings).
 A sample configuration file is available here: https://github.com/gemnasium/toolbelt/blob/master/config/gemnasium.yml.example 

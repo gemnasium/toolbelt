@@ -1,6 +1,7 @@
 0.2.6 / unreleased
 
 * "liveeval" command now returns 1 if runtime status is red
+* Better error logging: error message from API is now displayed
 
 0.2.5 / 2014-08-05
 

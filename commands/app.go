@@ -71,7 +71,7 @@ func App() (*cli.App, error) {
 				{
 					Name:      "show",
 					ShortName: "s",
-					Usage:     "Show projet detail",
+					Usage:     "Show project detail",
 					Action:    ProjectsShow,
 				},
 				{

@@ -54,7 +54,7 @@ Gemnasium Toolbelt stores your Gemnasium API key into your .netrc file.
 
 To be logged in to Gemnasium, you need to run `gemnasium auth login` and enter your Gemnasium credentials.
 
-Alternatively, you can pass directly your API token to all commands with the option `--token` or the env var ```GEMNASIUM_TOKEN````.
+Alternatively, you can pass directly your API token to all commands with the option `--token` or the env var ```GEMNASIUM_TOKEN```.
 Your API token is available in your settings page (https://gemnasium.com/settings).
 
 ### Create a new project

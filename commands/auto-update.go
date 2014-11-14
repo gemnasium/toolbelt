@@ -12,7 +12,7 @@ var auFunc = func(projectSlug string, args []string) error {
 	return autoupdate.Run(projectSlug, args)
 }
 
-func AutoUpdate(ctx *cli.Context) {
+func AutoUpdateRun(ctx *cli.Context) {
 	auth.AttemptLogin(ctx)
 	project, err := models.GetProject(ctx.String("project"))
 	utils.ExitIfErr(err)

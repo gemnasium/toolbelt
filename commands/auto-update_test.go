@@ -7,7 +7,7 @@ import (
 	"github.com/gemnasium/toolbelt/config"
 )
 
-func TestAutoUpdate(t *testing.T) {
+func TestAutoUpdateRun(t *testing.T) {
 	config.APIKey = "abcdef123"
 	config.ProjectSlug = "projectSlug"
 
@@ -22,7 +22,7 @@ func TestAutoUpdate(t *testing.T) {
 	}
 
 	// Call autoupdate command
-	os.Args = []string{"gemnasium", "autoupdate"}
+	os.Args = []string{"gemnasium", "autoupdate", "run"}
 	app.Run(os.Args)
 	if project != "projectSlug" {
 		t.Errorf("Should have called autoupdate func\n")
@@ -30,7 +30,7 @@ func TestAutoUpdate(t *testing.T) {
 
 	// With alias
 	project = ""
-	os.Args = []string{"gemnasium", "au"}
+	os.Args = []string{"gemnasium", "au", "r"}
 	app.Run(os.Args)
 	if project != "projectSlug" {
 		t.Errorf("Should have called autoupdate func\n")
@@ -38,7 +38,7 @@ func TestAutoUpdate(t *testing.T) {
 
 	// with Flag
 	project = ""
-	os.Args = []string{"gemnasium", "au", "-p=slug"}
+	os.Args = []string{"gemnasium", "au", "r", "-p=slug"}
 	app.Run(os.Args)
 	if project != "slug" {
 		t.Errorf("Should have called autoupdate func\n")

@@ -12,7 +12,7 @@ func TestAutoUpdateRun(t *testing.T) {
 	config.ProjectSlug = "projectSlug"
 
 	var project string
-	auFunc = func(slug string, args []string) error {
+	auRunFunc = func(slug string, args []string) error {
 		project = slug
 		return nil
 	}

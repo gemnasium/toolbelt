@@ -19,6 +19,7 @@ import (
 	"github.com/gemnasium/toolbelt/gemnasium"
 	"github.com/gemnasium/toolbelt/models"
 	"github.com/gemnasium/toolbelt/utils"
+	"github.com/olekukonko/tablewriter"
 )
 
 const (
@@ -53,6 +54,46 @@ type UpdateSetResult struct {
 }
 
 var ErrProjectRevisionEmpty error = fmt.Errorf("The current revision (%s) is unknown on Gemnasium, please push your dependency files before running autoupdate.\nSee `gemnasium df help push`.\n", utils.GetCurrentRevision())
+
+// Update the dependency files with the best update that has been foudnd so far
+func Apply(projectSlug string, testSuite []string) error {
+	err := checkProject(projectSlug)
+	if err != nil {
+		return err
+	}
+
+	dfiles, err := fetchDependencyFiles(projectSlug)
+	if err != nil {
+		return err
+	}
+
+	// DEBUG
+	table := tablewriter.NewWriter(os.Stdout)
+	table.SetHeader([]string{"Path", "SHA"})
+	for _, df := range dfiles {
+		table.Append([]string{df.Path, df.SHA})
+	}
+	table.Render() // Send output
+
+	fmt.Println("TODO: update local dependency files") // TODO
+
+	return nil
+}
+
+func fetchDependencyFiles(projectSlug string) (dfiles []models.DependencyFile, err error) {
+	revision, err := getRevision()
+	if err != nil {
+		return nil, err
+	}
+
+	opts := &gemnasium.APIRequestOptions{
+		Method: "GET",
+		URI:    fmt.Sprintf("/projects/%s/revisions/%s/auto_update_steps/best", projectSlug, revision),
+		Result: &dfiles,
+	}
+	err = gemnasium.APIRequest(opts)
+	return dfiles, err
+}
 
 // Download and loop over update sets, apply changes, run test suite, and finally notify gemnasium
 func Run(projectSlug string, testSuite []string) error {
@@ -149,15 +190,15 @@ func Run(projectSlug string, testSuite []string) error {
 }
 
 func fetchUpdateSet(projectSlug string) (*UpdateSet, error) {
-	revision := utils.GetCurrentRevision()
-	if revision == "" {
-		return nil, errors.New("Can't determine current revision, please use REVISION env var to specify it")
+	revision, revision_err := getRevision()
+	if revision_err != nil {
+		return nil, revision_err
 	}
+
 	var updateSet *UpdateSet
 	opts := &gemnasium.APIRequestOptions{
 		Method: "POST",
-		URI:    fmt.Sprintf("/projects/%s/branches/%s/update_sets/next", projectSlug, utils.GetCurrentBranch()),
-		Body:   &map[string]string{"revision": revision},
+		URI:    fmt.Sprintf("/projects/%s/revisions/%s/auto_update_steps/next", projectSlug, revision),
 		Result: &updateSet,
 	}
 	err := gemnasium.APIRequest(opts)
@@ -208,9 +249,14 @@ func pushUpdateSetResult(rs *UpdateSetResult) error {
 		return errors.New("Missing updateSet ID and/or State args")
 	}
 
+	revision, revision_err := getRevision()
+	if revision_err != nil {
+		return revision_err
+	}
+
 	opts := &gemnasium.APIRequestOptions{
 		Method: "PATCH",
-		URI:    fmt.Sprintf("/projects/%s/branches/%s/update_sets/%d", rs.ProjectSlug, utils.GetCurrentBranch(), rs.UpdateSetID),
+		URI:    fmt.Sprintf("/projects/%s/revisions/%s/auto_update_steps/%d", rs.ProjectSlug, revision, rs.UpdateSetID),
 		Body:   rs,
 	}
 	err := gemnasium.APIRequest(opts)
@@ -281,4 +327,12 @@ func checkProject(slug string) error {
 		return ErrProjectRevisionEmpty
 	}
 	return nil
+}
+
+func getRevision() (string, error) {
+	revision := utils.GetCurrentRevision()
+	if revision == "" {
+		return revision, errors.New("Can't determine current revision, please use REVISION env var to specify it")
+	}
+	return revision, nil
 }

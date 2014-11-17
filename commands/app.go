@@ -223,6 +223,19 @@ func App() (*cli.App, error) {
   `,
 					Action: AutoUpdateRun,
 				},
+				{
+					Name:      "apply",
+					ShortName: "a",
+					Usage:     "Apply the best update",
+					Flags: []cli.Flag{
+						cli.StringFlag{
+							Name:  "project, p",
+							Usage: "Project slug (identifier on Gemnasium)",
+						},
+					},
+					Description: `Update the dependency files to match the best update that has been found so far.`,
+					Action:      AutoUpdateApply,
+				},
 			},
 		},
 		{

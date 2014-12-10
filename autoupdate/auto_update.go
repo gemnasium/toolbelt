@@ -19,7 +19,6 @@ import (
 	"github.com/gemnasium/toolbelt/gemnasium"
 	"github.com/gemnasium/toolbelt/models"
 	"github.com/gemnasium/toolbelt/utils"
-	"github.com/olekukonko/tablewriter"
 )
 
 const (
@@ -55,7 +54,7 @@ type UpdateSetResult struct {
 
 var ErrProjectRevisionEmpty error = fmt.Errorf("The current revision (%s) is unknown on Gemnasium, please push your dependency files before running autoupdate.\nSee `gemnasium df help push`.\n", utils.GetCurrentRevision())
 
-// Update the dependency files with the best update that has been foudnd so far
+// Apply the best dependency files that have been found so far
 func Apply(projectSlug string, testSuite []string) error {
 	err := checkProject(projectSlug)
 	if err != nil {
@@ -67,19 +66,17 @@ func Apply(projectSlug string, testSuite []string) error {
 		return err
 	}
 
-	// DEBUG
-	table := tablewriter.NewWriter(os.Stdout)
-	table.SetHeader([]string{"Path", "SHA"})
-	for _, df := range dfiles {
-		table.Append([]string{df.Path, df.SHA})
+	err = updateDepFiles(dfiles)
+	if err != nil {
+		fmt.Printf("Error while restoring files: %s\n", err)
+		return err
 	}
-	table.Render() // Send output
-
-	fmt.Println("TODO: update local dependency files") // TODO
+	// No need to try the update, it will fail
 
 	return nil
 }
 
+// Fetch the best dependency files that have been found so far
 func fetchDependencyFiles(projectSlug string) (dfiles []models.DependencyFile, err error) {
 	revision, err := getRevision()
 	if err != nil {
@@ -93,6 +90,21 @@ func fetchDependencyFiles(projectSlug string) (dfiles []models.DependencyFile, e
 	}
 	err = gemnasium.APIRequest(opts)
 	return dfiles, err
+}
+
+// Update dependency files with given one (best dependency files)
+// REFACTOR: this is very similar to restoreDepFiles
+func updateDepFiles(dfiles []models.DependencyFile) error {
+	fmt.Printf("%d file(s) to be updated.\n", len(dfiles))
+	for _, df := range dfiles {
+		fmt.Printf("Updating file %s: ", df.Path)
+		err := ioutil.WriteFile(df.Path, df.Content, 0644)
+		if err != nil {
+			return err
+		}
+		fmt.Printf("done\n")
+	}
+	return nil
 }
 
 // Download and loop over update sets, apply changes, run test suite, and finally notify gemnasium

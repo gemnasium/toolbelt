@@ -68,7 +68,6 @@ func Run(projectSlug string, testSuite []string) error {
 		return errors.New("Arg [testSuite] can't be empty")
 	}
 
-	fmt.Printf("Executing test script: ")
 	out, err := executeTestSuite(testSuite)
 	if err != nil {
 		fmt.Println("Aborting, initial test suite run is failing:")
@@ -246,7 +245,7 @@ func executeTestSuite(ts []string) ([]byte, error) {
 	defer close(done)
 	var out []byte
 	var err error
-	fmt.Printf("Executing test script")
+	fmt.Printf("Executing test script: ")
 	start := time.Now()
 	go func() {
 		result, err := exec.Command(ts[0], ts[1:]...).Output()

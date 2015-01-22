@@ -57,6 +57,14 @@ If your project is already on Gemnasium, you need to `cd` into your project dire
 You will need your project's Slug (available in your project page settings).
 A sample configuration file is available here: https://github.com/gemnasium/toolbelt/blob/master/config/gemnasium.yml.example 
 
+### Push dependency files
+
+For projects not automatically synced with Github or Gitlab, you may want to push your files directly to Gemnasium.
+The corresponding project will updated soon after the files have been received. To push your files
+
+    gemnasium dependency_files push -f=Gemfile,Gemfile.lock
+
+
 ### Live Evaluation
 
 If you want to evaluate your project without pushing files or pulling info from Gemnasium, you may use the ```eval``` command:

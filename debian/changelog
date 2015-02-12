@@ -1,3 +1,10 @@
+gemnasium-toolbelt (0.2.6-1) stable; urgency=low
+
+  * Updates README about file pushing.
+  * Adds go 1.4.1 to test matrix
+
+ -- Gemnasium <info@gemnasium.com>  Thu, 12 Feb 2015 11:36:18 +0100
+
 gemnasium-toolbelt (0.2.5-1) stable; urgency=low
 
   * Fix dependency files push (gemnasium df push)

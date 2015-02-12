@@ -9,6 +9,6 @@ Vcs-Git: https://github.com/gemnasium/toolbelt.git
 Vcs-Browser: https://github.com/gemnasium/toolbelt
 
 Package: gemnasium-toolbelt
-Architecture: amd64
+Architecture: any
 Depends: ${shlibs:Depends}, ${misc:Depends}
 Description: Gemnasium toolbelt

@@ -5,6 +5,12 @@ gemnasium-toolbelt (0.2.6-1) stable; urgency=low
 
  -- Gemnasium <info@gemnasium.com>  Thu, 12 Feb 2015 11:36:18 +0100
 
+gemnasium-toolbelt (0.2.5-2) stable; urgency=low
+
+  * Allows for i386 packages.
+
+ -- Gemnasium <info@gemnasium.com>  Fri, 10 Oct 2014 15:38:25 +0200
+
 gemnasium-toolbelt (0.2.5-1) stable; urgency=low
 
   * Fix dependency files push (gemnasium df push)

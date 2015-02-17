@@ -201,9 +201,9 @@ func Run(projectSlug string, testSuite []string) error {
 }
 
 func fetchUpdateSet(projectSlug string) (*UpdateSet, error) {
-	revision, revision_err := getRevision()
-	if revision_err != nil {
-		return nil, revision_err
+	revision, err := getRevision()
+	if err != nil {
+		return nil, err
 	}
 
 	var updateSet *UpdateSet
@@ -212,12 +212,8 @@ func fetchUpdateSet(projectSlug string) (*UpdateSet, error) {
 		URI:    fmt.Sprintf("/projects/%s/revisions/%s/auto_update_steps/next", projectSlug, revision),
 		Result: &updateSet,
 	}
-	err := gemnasium.APIRequest(opts)
-	if err != nil {
-		return nil, err
-	}
-
-	return updateSet, nil
+	err = gemnasium.APIRequest(opts)
+	return updateSet, err
 }
 
 // Patch files if needed, and update packages
@@ -260,9 +256,9 @@ func pushUpdateSetResult(rs *UpdateSetResult) error {
 		return errors.New("Missing updateSet ID and/or State args")
 	}
 
-	revision, revision_err := getRevision()
-	if revision_err != nil {
-		return revision_err
+	revision, err := getRevision()
+	if err != nil {
+		return err
 	}
 
 	opts := &gemnasium.APIRequestOptions{
@@ -270,7 +266,7 @@ func pushUpdateSetResult(rs *UpdateSetResult) error {
 		URI:    fmt.Sprintf("/projects/%s/revisions/%s/auto_update_steps/%d", rs.ProjectSlug, revision, rs.UpdateSetID),
 		Body:   rs,
 	}
-	err := gemnasium.APIRequest(opts)
+	err = gemnasium.APIRequest(opts)
 	if err != nil {
 		return err
 	}

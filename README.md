@@ -4,7 +4,7 @@
 
 Gemnasium toolbelt is a CLI for the Gemnasium API.
 
-## How to install it ?
+## How to install it?
 
 ### On Mac OS X
 
@@ -16,10 +16,25 @@ And then
 
     brew install gemnasium-toolbelt
 
-If you don't want to use Homebrew, check out the Binaries section bellow.
-Or you can build it yourself by running:
+### Ubuntu and Debian
 
-    go build -o gemnasium
+#### Configure Gemnasium repository
+
+    sudo sh -c 'echo "deb http://apt.gemnasium.com stable main" > /etc/apt/sources.list.d/gemnasium.list'
+    
+#### Trust Gemnasium GPG key
+
+    sudo apt-key adv --recv-keys --keyserver keyserver.ubuntu.com E5CEAB0AC5F1CA2A
+    
+#### Update package list
+
+    sudo apt-get update
+    
+#### Install Gemnasium toolbelt
+
+    sudo apt-get install gemnasium-toolbelt
+
+The ```gemnasium``` command will be available in ```/usr/bin/gemnasium```
 
 ### From source
 
@@ -31,7 +46,7 @@ Or you can build it yourself by running:
 
 Binaries are available in the [releases](https://github.com/gemnasium/toolbelt/releases) page.
 
-## How to use it ?
+## How to use it?
 
 ### Authentication
 
@@ -39,7 +54,7 @@ Gemnasium Toolbelt stores your Gemnasium API key into your .netrc file.
 
 To be logged in to Gemnasium, you need to run `gemnasium auth login` and enter your Gemnasium credentials.
 
-Alternatively, you can pass directly your API token to all commands with the option `--token` or the env var GEMNASIUM_TOKEN
+Alternatively, you can pass directly your API token to all commands with the option `--token` or the env var ```GEMNASIUM_TOKEN```.
 Your API token is available in your settings page (https://gemnasium.com/settings).
 
 ### Create a new project
@@ -52,7 +67,7 @@ To create a new project on Gemnasium, you need to `cd` into your project directo
 
 If your project is already on Gemnasium, you need to `cd` into your project directory and run
 
-    gemnasium projects configure
+    gemnasium configure [project_slug]
 
 You will need your project's Slug (available in your project page settings).
 A sample configuration file is available here: https://github.com/gemnasium/toolbelt/blob/master/config/gemnasium.yml.example 
@@ -127,7 +142,7 @@ To obtain the list of env vars used and set:
 
    gemnasium env
 
-### Need further help ?
+### Need further help?
 
 A full commands documentation is available by running
 

@@ -1,7 +1,9 @@
 gemnasium-toolbelt (0.2.6-1) stable; urgency=low
 
-  * Updates README about file pushing.
-  * Adds go 1.4.1 to test matrix
+  * Added go 1.4.1 to test matrix
+  * "liveeval" command now returns 1 if runtime status is red
+  * Better error logging: error message from API is now displayed
+  * Autoupdate command is now split into `run` and `apply`. The command `gemnasium autoupdate` is now `gemnasium autoupdate run`. `apply` will fetch the best set of dependencies from gemnasium (after `run` returned a success).
 
  -- Gemnasium <info@gemnasium.com>  Thu, 12 Feb 2015 11:36:18 +0100
 

@@ -54,6 +54,59 @@ type UpdateSetResult struct {
 
 var ErrProjectRevisionEmpty error = fmt.Errorf("The current revision (%s) is unknown on Gemnasium, please push your dependency files before running autoupdate.\nSee `gemnasium df help push`.\n", utils.GetCurrentRevision())
 
+// Apply the best dependency files that have been found so far
+func Apply(projectSlug string, testSuite []string) error {
+	err := checkProject(projectSlug)
+	if err != nil {
+		return err
+	}
+
+	dfiles, err := fetchDependencyFiles(projectSlug)
+	if err != nil {
+		return err
+	}
+
+	err = updateDepFiles(dfiles)
+	if err != nil {
+		fmt.Printf("Error while restoring files: %s\n", err)
+		return err
+	}
+	// No need to try the update, it will fail
+
+	return nil
+}
+
+// Fetch the best dependency files that have been found so far
+func fetchDependencyFiles(projectSlug string) (dfiles []models.DependencyFile, err error) {
+	revision, err := getRevision()
+	if err != nil {
+		return nil, err
+	}
+
+	opts := &gemnasium.APIRequestOptions{
+		Method: "GET",
+		URI:    fmt.Sprintf("/projects/%s/revisions/%s/auto_update_steps/best", projectSlug, revision),
+		Result: &dfiles,
+	}
+	err = gemnasium.APIRequest(opts)
+	return dfiles, err
+}
+
+// Update dependency files with given one (best dependency files)
+// REFACTOR: this is very similar to restoreDepFiles
+func updateDepFiles(dfiles []models.DependencyFile) error {
+	fmt.Printf("%d file(s) to be updated.\n", len(dfiles))
+	for _, df := range dfiles {
+		fmt.Printf("Updating file %s: ", df.Path)
+		err := ioutil.WriteFile(df.Path, df.Content, 0644)
+		if err != nil {
+			return err
+		}
+		fmt.Printf("done\n")
+	}
+	return nil
+}
+
 // Download and loop over update sets, apply changes, run test suite, and finally notify gemnasium
 func Run(projectSlug string, testSuite []string) error {
 	err := checkProject(projectSlug)
@@ -68,7 +121,6 @@ func Run(projectSlug string, testSuite []string) error {
 		return errors.New("Arg [testSuite] can't be empty")
 	}
 
-	fmt.Printf("Executing test script: ")
 	out, err := executeTestSuite(testSuite)
 	if err != nil {
 		fmt.Println("Aborting, initial test suite run is failing:")
@@ -149,23 +201,19 @@ func Run(projectSlug string, testSuite []string) error {
 }
 
 func fetchUpdateSet(projectSlug string) (*UpdateSet, error) {
-	revision := utils.GetCurrentRevision()
-	if revision == "" {
-		return nil, errors.New("Can't determine current revision, please use REVISION env var to specify it")
-	}
-	var updateSet *UpdateSet
-	opts := &gemnasium.APIRequestOptions{
-		Method: "POST",
-		URI:    fmt.Sprintf("/projects/%s/branches/%s/update_sets/next", projectSlug, utils.GetCurrentBranch()),
-		Body:   &map[string]string{"revision": revision},
-		Result: &updateSet,
-	}
-	err := gemnasium.APIRequest(opts)
+	revision, err := getRevision()
 	if err != nil {
 		return nil, err
 	}
 
-	return updateSet, nil
+	var updateSet *UpdateSet
+	opts := &gemnasium.APIRequestOptions{
+		Method: "POST",
+		URI:    fmt.Sprintf("/projects/%s/revisions/%s/auto_update_steps/next", projectSlug, revision),
+		Result: &updateSet,
+	}
+	err = gemnasium.APIRequest(opts)
+	return updateSet, err
 }
 
 // Patch files if needed, and update packages
@@ -208,12 +256,17 @@ func pushUpdateSetResult(rs *UpdateSetResult) error {
 		return errors.New("Missing updateSet ID and/or State args")
 	}
 
+	revision, err := getRevision()
+	if err != nil {
+		return err
+	}
+
 	opts := &gemnasium.APIRequestOptions{
 		Method: "PATCH",
-		URI:    fmt.Sprintf("/projects/%s/branches/%s/update_sets/%d", rs.ProjectSlug, utils.GetCurrentBranch(), rs.UpdateSetID),
+		URI:    fmt.Sprintf("/projects/%s/revisions/%s/auto_update_steps/%d", rs.ProjectSlug, revision, rs.UpdateSetID),
 		Body:   rs,
 	}
-	err := gemnasium.APIRequest(opts)
+	err = gemnasium.APIRequest(opts)
 	if err != nil {
 		return err
 	}
@@ -246,7 +299,7 @@ func executeTestSuite(ts []string) ([]byte, error) {
 	defer close(done)
 	var out []byte
 	var err error
-	fmt.Printf("Executing test script")
+	fmt.Printf("Executing test script: ")
 	start := time.Now()
 	go func() {
 		result, err := exec.Command(ts[0], ts[1:]...).Output()
@@ -281,4 +334,12 @@ func checkProject(slug string) error {
 		return ErrProjectRevisionEmpty
 	}
 	return nil
+}
+
+func getRevision() (string, error) {
+	revision := utils.GetCurrentRevision()
+	if revision == "" {
+		return revision, errors.New("Can't determine current revision, please use REVISION env var to specify it")
+	}
+	return revision, nil
 }

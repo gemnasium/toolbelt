@@ -1,3 +1,9 @@
+0.2.6 / 2015-02-21
+
+* "liveeval" command now returns 1 if runtime status is red
+* Better error logging: error message from API is now displayed
+* Autoupdate command is now split into `run` and `apply`. The command `gemnasium autoupdate` is now `gemnasium autoupdate run`. `apply` will fetch the best set of dependencies from gemnasium (after `run` returned a success).
+
 0.2.5 / 2014-08-05
 
 * Fix dependency files push (gemnasium df push)

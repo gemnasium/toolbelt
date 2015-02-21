@@ -44,22 +44,29 @@ func APIRequest(opts *APIRequestOptions) error {
 	}
 	defer resp.Body.Close()
 
+	body, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		return err
+	}
+
 	if resp.StatusCode != http.StatusOK && resp.StatusCode != http.StatusNoContent {
-		return fmt.Errorf("Server returned non-200 status: %v\n", resp.Status)
+		type errMsg struct {
+			Message string `json:"message"`
+		}
+		em := &errMsg{}
+		if err := json.Unmarshal(body, &em); err != nil {
+			return fmt.Errorf("%s: %s\n", resp.Status, err)
+		}
+		return fmt.Errorf("%s: %s\n", resp.Status, em.Message)
 	}
 
 	// if RawFormat flag is set, don't format the output
 	if config.RawFormat {
-		body, err := ioutil.ReadAll(resp.Body)
-		if err != nil {
-			return err
-		}
 		fmt.Printf("%s", body)
 	}
 
 	if opts.Result != nil {
-		err = json.NewDecoder(resp.Body).Decode(opts.Result)
-		if err != nil {
+		if err = json.Unmarshal(body, opts.Result); err != nil {
 			return err
 		}
 	}

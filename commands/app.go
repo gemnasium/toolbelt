@@ -186,14 +186,20 @@ func App() (*cli.App, error) {
 		{
 			Name:      "autoupdate",
 			ShortName: "au",
-			Usage:     "Auto-update will test updates in your project, and notify Gemnasium of the result",
-			Flags: []cli.Flag{
-				cli.StringFlag{
-					Name:  "project, p",
-					Usage: "Project slug (identifier on Gemnasium)",
-				},
-			},
-			Description: `Auto-Update will fetch update sets from Gemnasium and run your test suite against them.
+			Usage:     "Auto-update the dependency files of the project",
+			Before:    auth.AttemptLogin,
+			Subcommands: []cli.Command{
+				{
+					Name:      "run",
+					ShortName: "r",
+					Usage:     "Run the auto-update",
+					Flags: []cli.Flag{
+						cli.StringFlag{
+							Name:  "project, p",
+							Usage: "Project slug (identifier on Gemnasium)",
+						},
+					},
+					Description: `Auto-Update will fetch update sets from Gemnasium and run your test suite against them.
    The test suite can be passed as arguments, or through the env var GEMNASIUM_TESTSUITE.
 
    Arguments:
@@ -215,7 +221,22 @@ func App() (*cli.App, error) {
    - cat script.sh | gemnasium autoupdate -p=your_project_slug
    - gemnasium autoupdate my_project_slug bundle exec rake
   `,
-			Action: AutoUpdate,
+					Action: AutoUpdateRun,
+				},
+				{
+					Name:      "apply",
+					ShortName: "a",
+					Usage:     "Apply the best update",
+					Flags: []cli.Flag{
+						cli.StringFlag{
+							Name:  "project, p",
+							Usage: "Project slug (identifier on Gemnasium)",
+						},
+					},
+					Description: `Update the dependency files to match the best update that has been found so far.`,
+					Action:      AutoUpdateApply,
+				},
+			},
 		},
 		{
 			Name:   "env",

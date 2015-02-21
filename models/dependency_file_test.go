@@ -82,7 +82,7 @@ func TestPatch(t *testing.T) {
 	}
 	df := NewDependencyFile(tmp.Name())
 
-	patch := fmt.Sprintf("--- %s\n+++ titi\n@@ -1,3 +1,3 @@\n source 'https://rubygems.org'\n\n-gem 'rails', '3.2.18'\n+gem 'rails', '3.2.21'\n")
+	patch := "--- %s\n+++ titi\n@@ -1,3 +1,3 @@\n source 'https://rubygems.org'\n\n-gem 'rails', '3.2.18'\n+gem 'rails', '3.2.21'\n"
 	expected := "source 'https://rubygems.org'\n\ngem 'rails', '3.2.21\n'"
 
 	df.Patch(patch)
@@ -123,7 +123,7 @@ func TestUpdate(t *testing.T) {
 	}
 	sha := "956b10afe3cf5511c4aa42ee93f208d8cd707ce3"
 	if df.SHA == sha {
-		t.Error("DependencyFile SHA is incorrect (Exp: %s, Got: %s)", "s", df.SHA, sha)
+		t.Errorf("DependencyFile SHA is incorrect (Exp: %s, Got: %s)", df.SHA, sha)
 	}
 }
 

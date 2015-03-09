@@ -36,7 +36,10 @@ func NewAPIRequest(method, urlStr, APIKey string, body io.Reader) (*http.Request
 	req.Header.Add("Content-Type", "application/json")
 	req.Header.Set("User-Agent", "Gemnasium Toolbelt "+config.VERSION)
 	req.Header.Add("X-Gms-Revision", GetCurrentRevision())
-	req.Header.Add("X-Gms-Branch", GetCurrentBranch())
+	// Send branch header only if not empty
+	if branch := GetCurrentBranch(); branch != "" {
+		req.Header.Add("X-Gms-Branch", branch)
+	}
 	return req, nil
 }
 
@@ -89,7 +92,7 @@ func GetCurrentBranch() string {
 	}
 	out, err := exec.Command(GitPath(), "rev-parse", "--abbrev-ref", "HEAD").Output()
 	if err != nil {
-		return "master"
+		return ""
 	}
 	return strings.TrimSpace(string(out))
 }

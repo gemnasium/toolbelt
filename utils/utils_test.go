@@ -50,8 +50,8 @@ func TestNewAPIRequest(t *testing.T) {
 				t.Errorf("Body should be \"testing string\", got: %s", body)
 			}
 		}
-		if req.Header["X-Gms-Client-Version"][0] != config.VERSION {
-			t.Errorf("X-Gms-Client-Version should be \"%s\", got: %s", config.VERSION, req.Header["X-Gms-Client-Version"])
+		if req.Header["User-Agent"][0] != "Gemnasium Toolbelt "+config.VERSION {
+			t.Errorf("User-Agent should be \"%s\", got: %s", config.VERSION, req.Header["User-Agent"])
 		}
 		if req.Header["X-Gms-Revision"][0] != testReq.Revision {
 			t.Errorf("X-Gms-Revision should be \"%s\", got: %s", testReq.Revision, req.Header["X-Gms-Revision"])

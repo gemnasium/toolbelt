@@ -34,7 +34,7 @@ func NewAPIRequest(method, urlStr, APIKey string, body io.Reader) (*http.Request
 	}
 	req.SetBasicAuth("x", APIKey)
 	req.Header.Add("Content-Type", "application/json")
-	req.Header.Add("X-Gms-Client-Version", config.VERSION)
+	req.Header.Set("User-Agent", "Gemnasium Toolbelt "+config.VERSION)
 	req.Header.Add("X-Gms-Revision", GetCurrentRevision())
 	req.Header.Add("X-Gms-Branch", GetCurrentBranch())
 	return req, nil

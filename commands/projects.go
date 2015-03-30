@@ -23,11 +23,15 @@ func ProjectsShow(ctx *cli.Context) {
 func ProjectsUpdate(ctx *cli.Context) {
 	project, err := models.GetProject(ctx.Args().First())
 	utils.ExitIfErr(err)
-	var name, desc *string
+	var name, desc, branch *string
 	var monitored *bool
 	if ctx.IsSet("name") {
 		nameString := ctx.String("name")
 		name = &nameString
+	}
+	if ctx.IsSet("branch") {
+		branchString := ctx.String("branch")
+		branch = &branchString
 	}
 	if ctx.IsSet("desc") {
 		descString := ctx.String("desc")
@@ -37,7 +41,7 @@ func ProjectsUpdate(ctx *cli.Context) {
 		mon := ctx.Bool("monitored")
 		monitored = &mon
 	}
-	err = project.Update(name, desc, monitored)
+	err = project.Update(name, desc, branch, monitored)
 	utils.ExitIfErr(err)
 }
 

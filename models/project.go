@@ -109,9 +109,9 @@ func (p *Project) Show() error {
 
 // Update project details
 // http://docs.gemnasium.apiary.io/#patch-%2Fprojects%2F%7Bslug%7D
-func (p *Project) Update(name, desc *string, monitored *bool) error {
-	if name == nil && desc == nil && monitored == nil {
-		return errors.New("Please specify at least one thing to update (name, desc, or monitored")
+func (p *Project) Update(name, desc, branch *string, monitored *bool) error {
+	if name == nil && desc == nil && monitored == nil && branch == nil {
+		return errors.New("Please specify at least one thing to update (name, desc, branch or monitored")
 	}
 
 	update := make(map[string]interface{})
@@ -123,6 +123,9 @@ func (p *Project) Update(name, desc *string, monitored *bool) error {
 	}
 	if monitored != nil {
 		update["monitored"] = *monitored
+	}
+	if branch != nil {
+		update["branch"] = *branch
 	}
 	opts := &gemnasium.APIRequestOptions{
 		Method: "PATCH",

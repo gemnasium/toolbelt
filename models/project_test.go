@@ -148,16 +148,12 @@ func TestUpdateProject(t *testing.T) {
 	r, w, _ := os.Pipe()
 	os.Stdout = w
 	config.APIEndpoint = ts.URL
-	var name, desc *string
-	var monitored *bool
-	nameStr := "API_project"
-	name = &nameStr
-	descStr := "A desc"
-	desc = &descStr
-	monitoredBool := false
-	monitored = &monitoredBool
+	name := "API_project"
+	desc := "A desc"
+	branch := "develop"
+	monitored := false
 	p := &Project{Slug: "blah"}
-	err := p.Update(name, desc, monitored)
+	err := p.Update(&name, &desc, &branch, &monitored)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -174,8 +170,8 @@ func TestUpdateProject(t *testing.T) {
 
 func TestUpdateProjectWithNoParams(t *testing.T) {
 	p := &Project{Slug: "blah"}
-	err := p.Update(nil, nil, nil)
-	if err.Error() != "Please specify at least one thing to update (name, desc, or monitored" {
+	err := p.Update(nil, nil, nil, nil)
+	if err.Error() != "Please specify at least one thing to update (name, desc, branch or monitored" {
 		t.Errorf("Expected error to be 'Please specify at least one thing to update (name, desc, or monitored', got %s\n", err)
 	}
 

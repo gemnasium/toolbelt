@@ -1,6 +1,7 @@
 0.2.7 / Unreleased
 
 * The current branch is not defaulting to master. The header won't be sent if the branch cannot be determined.
+* new param `project update --branch` to set the project default branch
 
 0.2.6 / 2015-02-21
 

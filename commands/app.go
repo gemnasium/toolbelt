@@ -86,6 +86,10 @@ func App() (*cli.App, error) {
 							Name:  "desc, d",
 							Usage: "A short description",
 						},
+						cli.StringFlag{
+							Name:  "branch, b",
+							Usage: "Set default branch",
+						},
 						cli.BoolFlag{
 							Name:  "monitored, m",
 							Usage: "Whether the project is watched by the user.",

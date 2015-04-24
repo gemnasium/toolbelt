@@ -104,7 +104,7 @@ The test suite can be passed as arguments, or through the env var GEMNASIUM_TEST
     gemnasium autoupdate my_project_slug bundle exec rake
 
 Typically, this command is to be used with a CI server, along with nightly builds. 
-Although Gemnasium will optimize as much as possible the number of combinasions, the number of iterations isn't predictable, and your test suite might be running for a long time.
+Although Gemnasium will optimize as much as possible the number of combinations, the number of iterations isn't predictable, and your test suite might be running for a long time.
 To avoid looping to death, the command will stop looping after 1 hour and exit.
 As soon as a valid update set is found, the loop will stop, and Gemnasium is notified. A patch will be available to download a few seconds later.
 We will propose soon an option to open Pull Requests directly on GitHub.

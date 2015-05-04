@@ -106,7 +106,7 @@ func readPassword(prompt string) (password string, err error) {
 
 // Try to get credential from 3 sources (in that exact order):
 // - from netrc file
-// - local config file (ie: .gemnasium.yml), with a `api_key` yaml key
+// - local config file (ie: .gemnasium.yml), with a `gemnasium_token` yaml key
 // - from command line flag `token`
 //
 // Each source will override previous one (token flag has priority above all).

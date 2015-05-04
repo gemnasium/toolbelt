@@ -16,7 +16,7 @@ func TestDefaultConfig(t *testing.T) {
 func TestWithConfigFile(t *testing.T) {
 	configData := []byte(`
 api_endpoint: "http://localhost/"
-api_key: 5590c4910af0ee9428a1447f6ef8090a    # You personal (secret) API key. Get it at https://gemnasium.com/settings/api_access
+gemnasium_token: 5590c4910af0ee9428a1447f6ef8090a    # You personal (secret) API key. Get it at https://gemnasium.com/settings/api_access
 project_name: project_name    # A name to remember your project.
 project_slug: e22c6e1a59e77e595949c936e3e797ea               # Unique slug for this project. Get it on the "project settings" page.
 ignored_paths:                # Paths you want to ignore when searching for dependency files (from app root)

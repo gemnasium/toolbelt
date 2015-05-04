@@ -65,8 +65,12 @@ func loadConfig() {
 	if api_endpoint, ok := c["api_endpoint"]; ok {
 		APIEndpoint = api_endpoint.(string)
 	}
+	// Left for backward compatibility
 	if api_key, ok := c["api_key"]; ok {
 		APIKey = api_key.(string)
+	}
+	if token, ok := c["gemnasium_token"]; ok {
+		APIKey = token.(string)
 	}
 	if project_slug, ok := c["project_slug"]; ok {
 		ProjectSlug = project_slug.(string)

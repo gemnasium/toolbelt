@@ -22,10 +22,9 @@ import (
 )
 
 const (
-	AUTOUPDATE_MAX_DURATION = 3600
-	UPDATE_SET_INVALID      = "invalid"
-	UPDATE_SET_SUCCESS      = "test_passed"
-	UPDATE_SET_FAIL         = "test_failed"
+	UPDATE_SET_INVALID = "invalid"
+	UPDATE_SET_SUCCESS = "test_passed"
+	UPDATE_SET_FAIL    = "test_failed"
 )
 
 type RequirementUpdate struct {
@@ -128,14 +127,8 @@ func Run(projectSlug string, testSuite []string) error {
 		return err
 	}
 
-	// We'll be checking loop duration on each iteration
-	startTime := time.Now()
 	// Loop until tests are green
 	for {
-		if time.Since(startTime).Seconds() > AUTOUPDATE_MAX_DURATION {
-			fmt.Println("Max loop duration reached, aborting.")
-			break
-		}
 		updateSet, err := fetchUpdateSet(projectSlug)
 		if err != nil {
 			return err

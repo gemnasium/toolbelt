@@ -1,3 +1,7 @@
+0.2.7 / 2016-02-04
+
+* Remove hardcoded max duration for autoupdate. CI servers have timeouts anyway. (#33)
+
 0.2.6 / 2015-02-21
 
 * "liveeval" command now returns 1 if runtime status is red

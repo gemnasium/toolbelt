@@ -1,3 +1,7 @@
+gemnasium-toolbelt (0.2.7-1) stable; urgency=low
+
+  * remove hardcoded max duration for autoupdate
+
 gemnasium-toolbelt (0.2.6-1) stable; urgency=low
 
   * Added go 1.4.1 to test matrix

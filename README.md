@@ -140,7 +140,7 @@ echo 'project_slug: tic' > .gemnasium.yml ; GEMNASIUM_PROJECT_SLUG="tac" gemnasi
 
 To obtain the list of env vars used and set:
 
-   gemnasium env
+    gemnasium env
 
 ### Need further help?
 

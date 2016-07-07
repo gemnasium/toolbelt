@@ -1,3 +1,8 @@
+0.2.8 / 2016-07-07
+
+* Add a Dockerfile, to build `gemnasium/toolbelt` image
+* Remove deprecation warnings when running commands
+
 0.2.7 / 2016-02-04
 
 * Remove hardcoded max duration for autoupdate. CI servers have timeouts anyway. (#33)

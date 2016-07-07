@@ -8,10 +8,10 @@ import (
 
 	"github.com/bgentry/go-netrc/netrc"
 	"github.com/bgentry/speakeasy"
-	"github.com/codegangsta/cli"
 	"github.com/gemnasium/toolbelt/config"
 	"github.com/gemnasium/toolbelt/utils"
 	"github.com/heroku/hk/term"
+	"github.com/urfave/cli"
 
 	"bytes"
 	"fmt"
@@ -123,7 +123,7 @@ func AttemptLogin(ctx *cli.Context) error {
 		config.APIKey = ctx.GlobalString("token")
 	}
 	if config.APIKey == "" {
-		utils.ExitWithError(ErrEmptyToken)
+		return ErrEmptyToken
 	}
 	return nil
 }

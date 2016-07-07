@@ -3,15 +3,17 @@ package commands
 import (
 	"strings"
 
-	"github.com/codegangsta/cli"
 	"github.com/gemnasium/toolbelt/auth"
 	"github.com/gemnasium/toolbelt/live-eval"
-	"github.com/gemnasium/toolbelt/utils"
+	"github.com/urfave/cli"
 )
 
-func LiveEvaluation(ctx *cli.Context) {
+func LiveEvaluation(ctx *cli.Context) error {
 	auth.AttemptLogin(ctx)
 	files := strings.Split(ctx.String("files"), ",")
 	err := liveeval.LiveEvaluation(files)
-	utils.ExitIfErr(err)
+	if err != nil {
+		return cli.NewExitError(err.Error(), 1)
+	}
+	return nil
 }

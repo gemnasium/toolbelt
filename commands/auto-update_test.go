@@ -16,10 +16,7 @@ func TestAutoUpdateRun(t *testing.T) {
 		project = slug
 		return nil
 	}
-	app, err := App()
-	if err != nil {
-		t.Fatal(err)
-	}
+	app := App()
 
 	// Call autoupdate command
 	os.Args = []string{"gemnasium", "autoupdate", "run"}

@@ -1,3 +1,8 @@
+gemnasium-toolbelt (0.2.8-1) stable; urgency=low
+
+  * Add a Dockerfile, to build `gemnasium/toolbelt` image
+  * Remove deprecation warnings when running commands
+
 gemnasium-toolbelt (0.2.7-1) stable; urgency=low
 
   * remove hardcoded max duration for autoupdate

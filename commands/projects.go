@@ -3,26 +3,36 @@ package commands
 import (
 	"os"
 
-	"github.com/codegangsta/cli"
 	"github.com/gemnasium/toolbelt/models"
-	"github.com/gemnasium/toolbelt/utils"
+	"github.com/urfave/cli"
 )
 
-func ProjectsList(ctx *cli.Context) {
+func ProjectsList(ctx *cli.Context) error {
 	err := models.ListProjects(ctx.Bool("private"))
-	utils.ExitIfErr(err)
+	if err != nil {
+		return cli.NewExitError(err.Error(), 1)
+	}
+	return nil
 }
 
-func ProjectsShow(ctx *cli.Context) {
+func ProjectsShow(ctx *cli.Context) error {
 	project, err := models.GetProject(ctx.Args().First())
-	utils.ExitIfErr(err)
+	if err != nil {
+		return cli.NewExitError(err.Error(), 1)
+	}
+
 	err = project.Show()
-	utils.ExitIfErr(err)
+	if err != nil {
+		return cli.NewExitError(err.Error(), 1)
+	}
+	return nil
 }
 
-func ProjectsUpdate(ctx *cli.Context) {
+func ProjectsUpdate(ctx *cli.Context) error {
 	project, err := models.GetProject(ctx.Args().First())
-	utils.ExitIfErr(err)
+	if err != nil {
+		return cli.NewExitError(err.Error(), 1)
+	}
 	var name, desc *string
 	var monitored *bool
 	if ctx.IsSet("name") {
@@ -38,19 +48,31 @@ func ProjectsUpdate(ctx *cli.Context) {
 		monitored = &mon
 	}
 	err = project.Update(name, desc, monitored)
-	utils.ExitIfErr(err)
+	if err != nil {
+		return cli.NewExitError(err.Error(), 1)
+	}
+	return nil
 }
 
-func ProjectsCreate(ctx *cli.Context) {
+func ProjectsCreate(ctx *cli.Context) error {
 	projectName := ctx.Args().First()
 	// will scan from os.Stding if projectName is empty
 	err := models.CreateProject(projectName, os.Stdin)
-	utils.ExitIfErr(err)
+	if err != nil {
+		return cli.NewExitError(err.Error(), 1)
+	}
+	return nil
 }
 
-func ProjectsSync(ctx *cli.Context) {
+func ProjectsSync(ctx *cli.Context) error {
 	project, err := models.GetProject(ctx.Args().First())
-	utils.ExitIfErr(err)
+	if err != nil {
+		return cli.NewExitError(err.Error(), 1)
+	}
+
 	err = project.Sync()
-	utils.ExitIfErr(err)
+	if err != nil {
+		return cli.NewExitError(err.Error(), 1)
+	}
+	return nil
 }

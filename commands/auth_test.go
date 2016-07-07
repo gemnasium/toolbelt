@@ -12,10 +12,7 @@ func TestLogin(t *testing.T) {
 		called = true
 		return nil
 	}
-	app, err := App()
-	if err != nil {
-		t.Fatal(err)
-	}
+	app := App()
 	os.Args = []string{"gemnasium", "auth", "login"}
 	app.Run(os.Args)
 	if called != true {
@@ -31,10 +28,7 @@ func TestLogout(t *testing.T) {
 		called = true
 		return nil
 	}
-	app, err := App()
-	if err != nil {
-		t.Fatal(err)
-	}
+	app := App()
 	os.Args = []string{"gemnasium", "auth", "logout"}
 	app.Run(os.Args)
 	if called != true {

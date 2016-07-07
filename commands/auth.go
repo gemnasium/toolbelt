@@ -1,9 +1,8 @@
 package commands
 
 import (
-	"github.com/codegangsta/cli"
 	"github.com/gemnasium/toolbelt/auth"
-	"github.com/gemnasium/toolbelt/utils"
+	"github.com/urfave/cli"
 )
 
 var login = func() error {
@@ -11,9 +10,12 @@ var login = func() error {
 }
 
 // auth.Login wrapper with a cli.Content
-func Login(ctx *cli.Context) {
+func Login(ctx *cli.Context) error {
 	err := login()
-	utils.ExitIfErr(err)
+	if err != nil {
+		return cli.NewExitError(err.Error(), 1)
+	}
+	return nil
 }
 
 var logout = func() error {
@@ -21,7 +23,10 @@ var logout = func() error {
 }
 
 // auth.Logout wrapper with a cli.Content
-func Logout(ctx *cli.Context) {
+func Logout(ctx *cli.Context) error {
 	err := logout()
-	utils.ExitIfErr(err)
+	if err != nil {
+		return cli.NewExitError(err.Error(), 1)
+	}
+	return nil
 }

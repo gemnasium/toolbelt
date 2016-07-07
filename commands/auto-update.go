@@ -1,11 +1,10 @@
 package commands
 
 import (
-	"github.com/codegangsta/cli"
 	"github.com/gemnasium/toolbelt/auth"
 	"github.com/gemnasium/toolbelt/autoupdate"
 	"github.com/gemnasium/toolbelt/models"
-	"github.com/gemnasium/toolbelt/utils"
+	"github.com/urfave/cli"
 )
 
 var auRunFunc = func(projectSlug string, args []string) error {
@@ -16,18 +15,28 @@ var auApplyFunc = func(projectSlug string, args []string) error {
 	return autoupdate.Apply(projectSlug, args)
 }
 
-func AutoUpdateRun(ctx *cli.Context) {
+func AutoUpdateRun(ctx *cli.Context) error {
 	auth.AttemptLogin(ctx)
 	project, err := models.GetProject(ctx.String("project"))
-	utils.ExitIfErr(err)
+	if err != nil {
+		return cli.NewExitError(err.Error(), 1)
+	}
 	err = auRunFunc(project.Slug, ctx.Args())
-	utils.ExitIfErr(err)
+	if err != nil {
+		return cli.NewExitError(err.Error(), 1)
+	}
+	return nil
 }
 
-func AutoUpdateApply(ctx *cli.Context) {
+func AutoUpdateApply(ctx *cli.Context) error {
 	auth.AttemptLogin(ctx)
 	project, err := models.GetProject(ctx.String("project"))
-	utils.ExitIfErr(err)
+	if err != nil {
+		return cli.NewExitError(err.Error(), 1)
+	}
 	err = auApplyFunc(project.Slug, ctx.Args())
-	utils.ExitIfErr(err)
+	if err != nil {
+		return cli.NewExitError(err.Error(), 1)
+	}
+	return nil
 }

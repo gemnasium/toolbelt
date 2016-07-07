@@ -17,10 +17,7 @@ func TestConfigue(t *testing.T) {
 	confFunc = func(project *models.Project) error {
 		return project.Configure(project.Slug, os.Stdin, &output)
 	}
-	app, err := App()
-	if err != nil {
-		t.Fatal(err)
-	}
+	app := App()
 
 	// Call autoupdate command
 	os.Args = []string{"gemnasium", "configure", "myProject"}

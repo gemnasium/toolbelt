@@ -1,12 +1,12 @@
 package commands
 
 import (
-	"github.com/codegangsta/cli"
 	"github.com/gemnasium/toolbelt/auth"
 	"github.com/gemnasium/toolbelt/config"
+	"github.com/urfave/cli"
 )
 
-func App() (*cli.App, error) {
+func App() *cli.App {
 	app := cli.NewApp()
 	app.Name = "gemnasium"
 	app.Usage = "Gemnasium toolbelt"
@@ -244,5 +244,5 @@ func App() (*cli.App, error) {
 			Action: DisplayEnvVars,
 		},
 	}
-	return app, nil
+	return app
 }

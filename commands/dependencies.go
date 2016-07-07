@@ -1,14 +1,18 @@
 package commands
 
 import (
-	"github.com/codegangsta/cli"
 	"github.com/gemnasium/toolbelt/models"
-	"github.com/gemnasium/toolbelt/utils"
+	"github.com/urfave/cli"
 )
 
-func DependenciesList(ctx *cli.Context) {
+func DependenciesList(ctx *cli.Context) error {
 	project, err := models.GetProject(ctx.Args().First())
-	utils.ExitIfErr(err)
+	if err != nil {
+		return cli.NewExitError(err.Error(), 1)
+	}
 	err = models.ListDependencies(project)
-	utils.ExitIfErr(err)
+	if err != nil {
+		return cli.NewExitError(err.Error(), 1)
+	}
+	return nil
 }

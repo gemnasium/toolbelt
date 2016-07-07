@@ -11,7 +11,6 @@ import (
 
 	"github.com/gemnasium/toolbelt/config"
 	"github.com/mgutz/ansi"
-	"github.com/wsxiaoys/terminal/color"
 )
 
 func PrintFatal(message string, args ...interface{}) {
@@ -55,17 +54,6 @@ func StatusDots(status string) string {
 		dots = "@k\u2B24 @k\u2B24 @k\u2B24  @{|}(none)"
 	}
 	return dots
-}
-
-func ExitIfErr(err error) {
-	if err != nil {
-		ExitWithError(err)
-	}
-}
-
-func ExitWithError(err error) {
-	color.Println("@{r!}" + err.Error())
-	os.Exit(1)
 }
 
 // return the current commit sha, using git

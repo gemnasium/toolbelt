@@ -10,19 +10,16 @@ import (
 func DependencyFilesList(ctx *cli.Context) error {
 	project, err := models.GetProject()
 	if err != nil {
-		return cli.NewExitError(err.Error(), 1)
+		return err
 	}
 	err = models.ListDependencyFiles(project)
-	if err != nil {
-		return cli.NewExitError(err.Error(), 1)
-	}
-	return nil
+	return err
 }
 
 func DependenciesPush(ctx *cli.Context) error {
 	project, err := models.GetProject()
 	if err != nil {
-		return cli.NewExitError(err.Error(), 1)
+		return err
 	}
 	var files []string
 	if ctx.IsSet("files") {
@@ -30,8 +27,5 @@ func DependenciesPush(ctx *cli.Context) error {
 		files = strings.Split(ctx.String("files"), ",")
 	}
 	err = models.PushDependencyFiles(project.Slug, files)
-	if err != nil {
-		return cli.NewExitError(err.Error(), 1)
-	}
-	return nil
+	return err
 }

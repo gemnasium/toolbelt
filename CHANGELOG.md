@@ -1,3 +1,8 @@
+0.2.9 / 2016-07-09
+
+* Fix debian packages
+* Code cleaning
+
 0.2.8 / 2016-07-07
 
 * Add a Dockerfile, to build `gemnasium/toolbelt` image

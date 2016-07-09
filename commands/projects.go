@@ -9,29 +9,23 @@ import (
 
 func ProjectsList(ctx *cli.Context) error {
 	err := models.ListProjects(ctx.Bool("private"))
-	if err != nil {
-		return cli.NewExitError(err.Error(), 1)
-	}
-	return nil
+	return err
 }
 
 func ProjectsShow(ctx *cli.Context) error {
 	project, err := models.GetProject(ctx.Args().First())
 	if err != nil {
-		return cli.NewExitError(err.Error(), 1)
+		return err
 	}
 
 	err = project.Show()
-	if err != nil {
-		return cli.NewExitError(err.Error(), 1)
-	}
-	return nil
+	return err
 }
 
 func ProjectsUpdate(ctx *cli.Context) error {
 	project, err := models.GetProject(ctx.Args().First())
 	if err != nil {
-		return cli.NewExitError(err.Error(), 1)
+		return err
 	}
 	var name, desc *string
 	var monitored *bool
@@ -48,31 +42,22 @@ func ProjectsUpdate(ctx *cli.Context) error {
 		monitored = &mon
 	}
 	err = project.Update(name, desc, monitored)
-	if err != nil {
-		return cli.NewExitError(err.Error(), 1)
-	}
-	return nil
+	return err
 }
 
 func ProjectsCreate(ctx *cli.Context) error {
 	projectName := ctx.Args().First()
 	// will scan from os.Stding if projectName is empty
 	err := models.CreateProject(projectName, os.Stdin)
-	if err != nil {
-		return cli.NewExitError(err.Error(), 1)
-	}
-	return nil
+	return err
 }
 
 func ProjectsSync(ctx *cli.Context) error {
 	project, err := models.GetProject(ctx.Args().First())
 	if err != nil {
-		return cli.NewExitError(err.Error(), 1)
+		return err
 	}
 
 	err = project.Sync()
-	if err != nil {
-		return cli.NewExitError(err.Error(), 1)
-	}
-	return nil
+	return err
 }

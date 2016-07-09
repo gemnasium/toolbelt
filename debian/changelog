@@ -1,3 +1,12 @@
+gemnasium-toolbelt (0.2.9-1) stable; urgency=low
+
+  * Fix debian packages
+  * Code cleaning
+
+gemnasium-toolbelt (0.2.8-1) stable; urgency=low
+
+  * Add a Dockerfile, to build `gemnasium/toolbelt` image
+  * Remove deprecation warnings when running commands
 gemnasium-toolbelt (0.2.8-1) stable; urgency=low
 
   * Add a Dockerfile, to build `gemnasium/toolbelt` image

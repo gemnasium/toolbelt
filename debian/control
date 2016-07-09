@@ -1,14 +1,14 @@
 Source: gemnasium-toolbelt
 Section: devel
 Priority: extra
-Maintainer: Gemnasium <info@gemnasium.com>
-Build-Depends: debhelper (>= 8.0.0) 
-Standards-Version: 3.9.3
+Maintainer: Gemnasium <support@gemnasium.com>
+Build-Depends: debhelper (>= 9.1.0), golang-go
+Standards-Version: 3.9.4
+
 Homepage: https://github.com/gemnasium/toolbelt
 Vcs-Git: https://github.com/gemnasium/toolbelt.git
 Vcs-Browser: https://github.com/gemnasium/toolbelt
 
 Package: gemnasium-toolbelt
 Architecture: any
-Depends: ${shlibs:Depends}, ${misc:Depends}
 Description: Gemnasium toolbelt

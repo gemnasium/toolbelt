@@ -19,24 +19,18 @@ func AutoUpdateRun(ctx *cli.Context) error {
 	auth.AttemptLogin(ctx)
 	project, err := models.GetProject(ctx.String("project"))
 	if err != nil {
-		return cli.NewExitError(err.Error(), 1)
+		return err
 	}
 	err = auRunFunc(project.Slug, ctx.Args())
-	if err != nil {
-		return cli.NewExitError(err.Error(), 1)
-	}
-	return nil
+	return err
 }
 
 func AutoUpdateApply(ctx *cli.Context) error {
 	auth.AttemptLogin(ctx)
 	project, err := models.GetProject(ctx.String("project"))
 	if err != nil {
-		return cli.NewExitError(err.Error(), 1)
+		return err
 	}
 	err = auApplyFunc(project.Slug, ctx.Args())
-	if err != nil {
-		return cli.NewExitError(err.Error(), 1)
-	}
-	return nil
+	return err
 }

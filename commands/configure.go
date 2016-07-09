@@ -10,26 +10,20 @@ import (
 var confFunc = func(project *models.Project) error {
 	f, err := os.Create(".gemnasium.yml")
 	if err != nil {
-		return cli.NewExitError(err.Error(), 1)
+		return err
 	}
 	defer f.Close()
 	err = project.Configure(project.Slug, os.Stdin, f)
-	if err != nil {
-		return cli.NewExitError(err.Error(), 1)
-	}
-	return nil
+	return err
 }
 
 func Configure(ctx *cli.Context) error {
 	slug := ctx.Args().First()
 	project, err := models.GetProject(slug)
 	if err != nil {
-		return cli.NewExitError(err.Error(), 1)
+		return err
 	}
 
 	err = confFunc(project)
-	if err != nil {
-		return cli.NewExitError(err.Error(), 1)
-	}
-	return nil
+	return err
 }

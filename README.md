@@ -20,7 +20,7 @@ And then
 
 #### Configure Gemnasium repository
 
-    sudo sh -c 'echo "deb http://apt.gemnasium.com stable main" > /etc/apt/sources.list.d/gemnasium.list'
+    sudo sh -c 'echo "deb https://apt.gemnasium.com stable main" > /etc/apt/sources.list.d/gemnasium.list'
     
 #### Trust Gemnasium GPG key
 

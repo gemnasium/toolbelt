@@ -24,11 +24,13 @@ func CreateProjectTestServer(t *testing.T, APIKey string) *httptest.Server {
 		auth := r.Header.Get("Authorization")
 		if siteAuth != auth {
 			w.WriteHeader(http.StatusUnauthorized)
+			w.Write([]byte(`{"message": "Invalid API Key"}`))
+			return
 		}
 
 		// Check URI
-		if r.RequestURI != CREATE_PROJECT_PATH {
-			t.Errorf("Expected RequestURI to be %s, got: %s", CREATE_PROJECT_PATH, r.RequestURI)
+		if r.RequestURI != "/projects" {
+			t.Errorf("Expected RequestURI to be %s, got: %s", "/projects", r.RequestURI)
 		}
 
 		// Check request is a POST
@@ -83,7 +85,7 @@ func TestCreateProjectWithWrongToken(t *testing.T) {
 	config.APIKey = "invalid_key"
 	r := strings.NewReader("Project description\n")
 	err := CreateProject("test_project", r)
-	if err.Error() != "Server returned non-200 status: 401 Unauthorized\n" {
+	if err.Error() != "Error: Invalid API Key (status=401)\n" {
 		t.Error(err)
 	}
 }

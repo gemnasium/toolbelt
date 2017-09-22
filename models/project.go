@@ -2,14 +2,10 @@ package models
 
 import (
 	"bufio"
-	"bytes"
-	"encoding/json"
 	"errors"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"log"
-	"net/http"
 	"os"
 	"strconv"
 
@@ -19,11 +15,6 @@ import (
 	"github.com/olekukonko/tablewriter"
 	"github.com/wsxiaoys/terminal/color"
 	"gopkg.in/yaml.v1"
-)
-
-const (
-	LIST_PROJECTS_PATH  = "/projects"
-	CREATE_PROJECT_PATH = "/projects"
 )
 
 type Project struct {
@@ -44,7 +35,7 @@ func ListProjects(privateProjectsOnly bool) error {
 	var projects map[string][]Project
 	opts := &gemnasium.APIRequestOptions{
 		Method: "GET",
-		URI:    LIST_PROJECTS_PATH,
+		URI:    "/projects",
 		Result: &projects,
 	}
 	err := gemnasium.APIRequest(opts)
@@ -157,36 +148,18 @@ func CreateProject(projectName string, r io.Reader) error {
 	project.Description = scanner.Text()
 	fmt.Println("") // quickfix for goconvey
 
-	projectAsJson, err := json.Marshal(project)
-	if err != nil {
-		return err
-	}
-	client := &http.Client{}
-	req, err := http.NewRequest("POST", config.APIEndpoint+CREATE_PROJECT_PATH, bytes.NewReader(projectAsJson))
-	if err != nil {
-		return err
-	}
-	req.SetBasicAuth("x", config.APIKey)
-	req.Header.Add("Content-Type", "application/json")
-	resp, err := client.Do(req)
-	if err != nil {
-		return err
-	}
-	defer resp.Body.Close()
-	body, err := ioutil.ReadAll(resp.Body)
-	if err != nil {
-		return err
-	}
-
-	if resp.StatusCode != http.StatusOK {
-		return fmt.Errorf("Server returned non-200 status: %v\n", resp.Status)
-	}
-
-	// Parse server response
 	var jsonResp map[string]interface{}
-	if err := json.Unmarshal(body, &jsonResp); err != nil {
+	opts := &gemnasium.APIRequestOptions{
+		Method: "POST",
+		URI:    "/projects",
+		Body:   project,
+		Result: &jsonResp,
+	}
+	err := gemnasium.APIRequest(opts)
+	if err != nil {
 		return err
 	}
+
 	fmt.Printf("Project '%s' created: https://gemnasium.com/%s (Remaining slots: %v)\n", project.Name, jsonResp["slug"], jsonResp["remaining_slot_count"])
 	fmt.Printf("To configure this project, use the following command:\ngemnasium configure %s\n", jsonResp["slug"])
 	return nil

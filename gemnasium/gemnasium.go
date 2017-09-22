@@ -57,7 +57,7 @@ func APIRequest(opts *APIRequestOptions) error {
 		if err := json.Unmarshal(body, &em); err != nil {
 			return fmt.Errorf("%s: %s\n", resp.Status, err)
 		}
-		return fmt.Errorf("%s: %s\n", resp.Status, em.Message)
+		return fmt.Errorf("Error: %s (status=%d)\n", em.Message, resp.StatusCode)
 	}
 
 	// if RawFormat flag is set, don't format the output

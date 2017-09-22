@@ -1,3 +1,7 @@
+0.2.10 / 2017-09-22
+
+* Better error messages when project creation fails
+
 0.2.9 / 2016-07-09
 
 * Fix debian packages

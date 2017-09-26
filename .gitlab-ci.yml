@@ -1,0 +1,39 @@
+image: docker:latest
+
+services:
+  - docker:dind
+
+stages:
+  - build-container
+  - build-test
+  - package
+
+variables:
+  CONTAINER_WHEEZY_IMAGE: toolbelt:${CI_COMMIT_REF_NAME}_wheezy
+
+Build wheezy packager:
+  stage: build-container
+  script:
+    - docker build --pull -t $CONTAINER_WHEEZY_IMAGE -f docker/Dockerfile-wheezy .
+
+Build toolbelt:
+  stage: build-test
+  script:
+    - mkdir artifacts
+    - docker run -v $PWD/artifacts:/artifacts -v $PWD:/src -e GPG_KEY=$GPG_KEY $CONTAINER_WHEEZY_IMAGE /bin/build.sh
+  artifacts:
+    paths:
+      - "artifacts/*"
+    expire_in: 1 week
+
+Test toolbelt:
+  stage: build-test
+  script:
+    - docker run -v $PWD:/src -e REVISION=$CI_COMMIT_SHA $CONTAINER_WHEEZY_IMAGE /bin/test.sh
+
+Package toolbelt:
+  stage: package
+  dependencies:
+    - "Build toolbelt"
+  script:
+    - ls -lh artifacts

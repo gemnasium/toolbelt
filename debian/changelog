@@ -1,20 +1,29 @@
-gemnasium-toolbelt (0.2.9-1) stable; urgency=low
+gemnasium-toolbelt (0.2.9.1) stable; urgency=low
 
   * Fix debian packages
   * Code cleaning
 
+ -- Gemnasium <info@gemnasium.com>  Thu, 20 Jan 2017 16:19:32 +0100
+
 gemnasium-toolbelt (0.2.8-1) stable; urgency=low
 
   * Add a Dockerfile, to build `gemnasium/toolbelt` image
   * Remove deprecation warnings when running commands
+
+ -- Gemnasium <info@gemnasium.com>  Thu, 12 Jul 2016 12:12:31 +0100
+
 gemnasium-toolbelt (0.2.8-1) stable; urgency=low
 
   * Add a Dockerfile, to build `gemnasium/toolbelt` image
   * Remove deprecation warnings when running commands
+
+ -- Gemnasium <info@gemnasium.com>  Thu, 7 Jul 2016 09:11:35 +0100
 
 gemnasium-toolbelt (0.2.7-1) stable; urgency=low
 
   * remove hardcoded max duration for autoupdate
+
+ -- Gemnasium <info@gemnasium.com>  Thu, 4 Feb 2016 15:13:02 +0100
 
 gemnasium-toolbelt (0.2.6-1) stable; urgency=low
 

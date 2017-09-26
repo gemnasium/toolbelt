@@ -1,3 +1,9 @@
+gemnasium-toolbelt (0.2.10.1) stable; urgency=medium
+
+  * Fixes toolbelt version
+
+ -- Gemnasium <info@gemnasium.com>  Tue, 26 Sep 2017 17:14:16 +0200
+
 gemnasium-toolbelt (0.2.10) stable; urgency=medium
 
   * Better error messages when project creation fails

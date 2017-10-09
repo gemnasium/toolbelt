@@ -8,6 +8,7 @@ ENV GOPATH /go
 RUN go get github.com/tools/godep
 
 COPY docker/build.sh /bin/build.sh
+COPY docker/gpg_wrapper.sh /bin/gpg_wrapper.sh
 COPY docker/test.sh /bin/test.sh
 
 WORKDIR /go/src/toolbelt

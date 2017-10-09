@@ -11,6 +11,6 @@ gpg --import /tmp/key.asc
 cp -r /src/* .
 go get -t
 go build -o /artifacts/gemnasium
-dpkg-buildpackage -tc -k689FC23B
+dpkg-buildpackage -tc -k689FC23B -p/bin/gpg_wrapper.sh
 mv ../gemnasium* /artifacts
 

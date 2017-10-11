@@ -1,3 +1,7 @@
+0.2.11 / 2017-10-11
+
+* Accept package-lock.json dependency files
+
 0.2.10 / 2017-09-22
 
 * Better error messages when project creation fails

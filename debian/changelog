@@ -1,6 +1,12 @@
+gemnasium-toolbelt (0.2.11) stable; urgency=low
+
+  * Accept package-lock.json dependency files
+
+ -- Gemnasium <support@gemnasium.com>  Mon, 11 Oct 2017 16:57:10 +0200
+
 gemnasium-toolbelt (0.2.10.2) stable; urgency=low
 
-  * Signs packages with SHA512 instead of the obsolete SHA1 
+  * Signs packages with SHA512 instead of the obsolete SHA1
 
  -- Gemnasium <info@gemnasium.com>  Mon, 09 Oct 2017 15:18:10 +0200
 

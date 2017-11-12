@@ -43,6 +43,8 @@ func TestSupportedDependencyFiles(t *testing.T) {
 		"yarn.lock",
 		"setup.py",
 		"requirements.txt",
+		"requirements.pip",
+		"requirements-production.txt",
 		"requires.txt",
 		"composer.json",
 		"composer.lock",

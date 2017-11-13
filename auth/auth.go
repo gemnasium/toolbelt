@@ -45,6 +45,30 @@ func Login() error {
 	return nil
 }
 
+// Login with the user email and API token
+// An entry will be created in ~/.netrc on successful login.
+func LoginWithAPIToken() error {
+	// Create a function to be overriden in tests
+	email, token, err := getTokenCredentials()
+	if err != nil {
+		return err
+	}
+
+	// Configure API with the token
+	api.APIImpl.SetKey(token)
+	if err != nil {
+		return err
+	}
+
+	err = saveCreds(api.APIImpl.Host(), email, api.APIImpl.Key())
+	if err != nil {
+		utils.PrintFatal("saving new token: " + err.Error())
+	}
+	fmt.Println("Logged in.")
+
+	return nil
+}
+
 // Logout doesn't hit the API of course.
 // It simply removes the corresponding entry in ~/.netrc
 func Logout() error {
@@ -68,13 +92,24 @@ var getCredentials = func() (email, password string, err error) {
 	return email, password, nil
 }
 
+var getTokenCredentials = func() (email, token string, err error) {
+	fmt.Printf("Enter your email: ")
+	fmt.Scanf("%s", &email)
+	// NOTE: gopass doesn't support multi-byte chars on Windows
+	token, err = readPassword("Enter your token (API Key, it will be hidden) : ")
+	if err != nil {
+		return "", "", err
+	}
+	return email, token, nil
+}
+
 func readPassword(prompt string) (password string, err error) {
 	if acceptPasswordFromStdin && !term.IsTerminal(os.Stdin) {
 		_, err = fmt.Scanln(&password)
 		return
 	}
 	// NOTE: speakeasy may not support multi-byte chars on Windows
-	return speakeasy.Ask("Enter password: ")
+	return speakeasy.Ask(prompt)
 }
 
 // Try to get credential from 3 sources (in that exact order):

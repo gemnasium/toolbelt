@@ -66,6 +66,11 @@ func App() *cli.App {
 					Action: Login,
 				},
 				{
+					Name:   "with-api-token",
+					Usage:  "Login with your API token (API Key in your profile page)",
+					Action: LoginWithAPIToken,
+				},
+				{
 					Name:   "logout",
 					Usage:  "Logout",
 					Action: Logout,

@@ -89,7 +89,7 @@ If you want to evaluate your project without pushing files or pulling info from 
 
 The command will exit with a code 1 if the project global status is "red".
 
-(Needs a paid plan)
+**A Gold subscription is required to use Live Evaluation.**
 
 ### Auto Update (Only available on gemnasium.com API v1 for now)
 

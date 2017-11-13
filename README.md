@@ -54,7 +54,8 @@ Gemnasium Toolbelt stores your Gemnasium API key into your .netrc file.
 
 To be logged in to Gemnasium, you need to run `gemnasium auth login` and enter your Gemnasium credentials.
 
-Alternatively, you can pass directly your API token to all commands with the option `--token` or the env var ```GEMNASIUM_TOKEN```.
+Alternatively, you can pass directly your API token to all commands with the option `--token` or the env var ```GEMNASIUM_TOKEN```
+or use the `gemnasium auth with-api-token` command to remember it.
 Your API token is available in your settings page (https://gemnasium.com/settings).
 
 ### Create a new project
@@ -80,7 +81,7 @@ The corresponding project will updated soon after the files have been received. 
     gemnasium dependency_files push -f=Gemfile,Gemfile.lock
 
 
-### Live Evaluation
+### Live Evaluation (Only available on gemnasium.com API v1 for now)
 
 If you want to evaluate your project without pushing files or pulling info from Gemnasium, you may use the ```eval``` command:
 
@@ -90,7 +91,7 @@ The command will exit with a code 1 if the project global status is "red".
 
 (Needs a paid plan)
 
-### Auto Update
+### Auto Update (Only available on gemnasium.com API v1 for now)
 
 Auto-Update will fetch update sets from Gemnasium and run your test suite against them.
 The test suite can be passed as arguments, or through the env var GEMNASIUM_TESTSUITE.

@@ -5,6 +5,8 @@ import (
 
 	"github.com/urfave/cli"
 	"github.com/gemnasium/toolbelt/project"
+	"github.com/gemnasium/toolbelt/api"
+	"errors"
 )
 
 func ProjectsList(ctx *cli.Context) error {
@@ -38,6 +40,13 @@ func ProjectsUpdate(ctx *cli.Context) error {
 		desc = &descString
 	}
 	if ctx.IsSet("monitored") {
+		switch api.APIImpl.(type) {
+		case *api.APIv1:
+			// Ok
+		default:
+			// Monitoring is an API v1 feature only
+			return errors.New("Setting monitored can only be used on API version 1.")
+		}
 		mon := ctx.Bool("monitored")
 		monitored = &mon
 	}

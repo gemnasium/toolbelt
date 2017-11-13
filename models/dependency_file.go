@@ -18,7 +18,7 @@ import (
 )
 
 const (
-	SUPPORTED_DEPENDENCY_FILES = `(Gemfile|Gemfile\.lock|.*\.gemspec|package\.json|npm-shrinkwrap\.json|setup\.py|requirements\.txt|requires\.txt|composer\.json|composer\.lock|bower\.json)$`
+	SUPPORTED_DEPENDENCY_FILES = `(Gemfile|Gemfile\.lock|gems\.rb|gems\.locked|.*\.gemspec|package\.json|package-lock\.json|npm-shrinkwrap\.json|yarn\.lock|setup\.py|requirements\.txt|requirements\.pip|requirements.*\.txt|requires\.txt|composer\.json|composer\.lock|bower\.json|pom\.xml)$`
 )
 
 type DependencyFile struct {

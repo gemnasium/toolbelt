@@ -9,6 +9,7 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"os"
+	"regexp"
 	"testing"
 
 	"github.com/gemnasium/toolbelt/config"
@@ -25,6 +26,39 @@ func testFile() TestFile {
 	return TestFile{
 		Content: []byte("source 'https://rubygems.org'\n\ngem 'rails', '3.2.18'\n"),
 		SHA:     "752751b8bf149dfea0d8b8b45cec23e6ac30b4a1",
+	}
+}
+
+func TestSupportedDependencyFiles(t *testing.T) {
+	var filenames = []string{
+		"Gemfile",
+		"Gemfile.lock",
+		"gems.rb",
+		"gems.locked",
+		".gemspec",
+		".xyz.gemspec",
+		"package.json",
+		"package-lock.json",
+		"npm-shrinkwrap.json",
+		"yarn.lock",
+		"setup.py",
+		"requirements.txt",
+		"requirements.pip",
+		"requirements-production.txt",
+		"requires.txt",
+		"composer.json",
+		"composer.lock",
+		"bower.json",
+		"pom.xml",
+	}
+	for _, filename := range filenames {
+		matched, err := regexp.MatchString(SUPPORTED_DEPENDENCY_FILES, filename)
+		if err != nil {
+			t.Fatal(err)
+		}
+		if !matched {
+			t.Errorf("Expected %s to be a supported dependency file", filename)
+		}
 	}
 }
 

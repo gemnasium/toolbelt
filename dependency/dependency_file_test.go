@@ -1,4 +1,4 @@
-package models
+package dependency
 
 import (
 	"bytes"
@@ -11,7 +11,7 @@ import (
 	"os"
 	"testing"
 
-	"github.com/gemnasium/toolbelt/config"
+	"github.com/gemnasium/toolbelt/api"
 )
 
 type TestFile struct {
@@ -62,7 +62,7 @@ func TestCheckFileSHA1(t *testing.T) {
 		t.Errorf("DependencyFile has an invalid SHA (Exp: '%s', Got: '%s')\n", tf.SHA, df.SHA)
 	}
 
-	if err := df.CheckFileSHA1(); err != nil {
+	if err := DependencyFileCheckFileSHA1(df); err != nil {
 		t.Fatal(err)
 	}
 }
@@ -83,11 +83,12 @@ func TestPatch(t *testing.T) {
 	df := NewDependencyFile(tmp.Name())
 
 	patch := "--- %s\n+++ titi\n@@ -1,3 +1,3 @@\n source 'https://rubygems.org'\n\n-gem 'rails', '3.2.18'\n+gem 'rails', '3.2.21'\n"
-	expected := "source 'https://rubygems.org'\n\ngem 'rails', '3.2.21\n'"
+	expected := "source 'https://rubygems.org'\n\ngem 'rails', '3.2.21'\n"
 
-	df.Patch(patch)
+	DependencyFilePatch(df, patch)
 
-	if bytes.Equal(df.Content, []byte(expected)) {
+	var bytesExpected = []byte(expected)
+	if !bytes.Equal(df.Content, bytesExpected) {
 		t.Errorf("DependencyFile content is incorrect (Exp: '%s', Got: '%s')\n", expected, df.Content)
 	}
 	if df.SHA == tf.SHA {
@@ -116,7 +117,7 @@ func TestUpdate(t *testing.T) {
 		t.Error(err)
 	}
 
-	df.Update()
+	DependencyFileUpdate(df)
 
 	if bytes.Equal(df.Content, []byte(newContent)) {
 		t.Errorf("DependencyFile content is incorrect (Exp: '%s', Got: '%s')\n", newContent, df.Content)
@@ -167,8 +168,8 @@ func TestListDependencyFiles(t *testing.T) {
 	old := os.Stdout // keep backup of the real stdout
 	r, w, _ := os.Pipe()
 	os.Stdout = w
-	config.APIEndpoint = ts.URL
-	err := ListDependencyFiles(&Project{Slug: "blah"})
+	api.APIImpl = api.NewAPIv1(ts.URL, "")
+	err := ListDependencyFiles(&api.Project{Slug: "blah"})
 	if err != nil {
 		t.Error(err)
 	}
@@ -209,13 +210,13 @@ func TestPushDependencyFiles(t *testing.T) {
 	old := os.Stdout // keep backup of the real stdout
 	r, w, _ := os.Pipe()
 	os.Stdout = w
-	config.APIEndpoint = ts.URL
+	api.APIImpl = api.NewAPIv1(ts.URL, "")
 
-	getLocalDependencyFiles = func() ([]*DependencyFile, error) {
-		return []*DependencyFile{
-			&DependencyFile{Path: "Gemfile", SHA: "Gemfile SHA-1", Content: []byte("Gemfile.lock base64 encoded content")},
-			&DependencyFile{Path: "Gemfile.lock", SHA: "Gemfile.lock SHA-1", Content: []byte("Gemfile base64 encoded content")},
-			&DependencyFile{Path: "js/package.json", SHA: "package.json SHA-1", Content: []byte("package.json content")},
+	getLocalDependencyFiles = func() ([]*api.DependencyFile, error) {
+		return []*api.DependencyFile{
+			&api.DependencyFile{Path: "Gemfile", SHA: "Gemfile SHA-1", Content: []byte("Gemfile.lock base64 encoded content")},
+			&api.DependencyFile{Path: "Gemfile.lock", SHA: "Gemfile.lock SHA-1", Content: []byte("Gemfile base64 encoded content")},
+			&api.DependencyFile{Path: "js/package.json", SHA: "package.json SHA-1", Content: []byte("package.json content")},
 		}, nil
 	}
 

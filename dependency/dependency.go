@@ -1,4 +1,4 @@
-package models
+package dependency
 
 import (
 	"io"
@@ -8,21 +8,13 @@ import (
 	"strings"
 
 	"github.com/olekukonko/tablewriter"
+	"github.com/gemnasium/toolbelt/api"
+	"github.com/gemnasium/toolbelt/project"
 )
 
-type Dependency struct {
-	Requirement   string     `json:"requirement"`
-	LockedVersion string     `json:"locked"`
-	Package       Package    `json:"package"`
-	Type          string     `json:"type"`
-	FirstLevel    bool       `json:"first_level"`
-	Color         string     `json:"color"`
-	Advisories    []Advisory `json:"advisories,omitempty"`
-}
-
 // http://docs.gemnasium.apiary.io/#dependencies
-func ListDependencies(project *Project) error {
-	deps, err := project.Dependencies()
+func ListDependencies(p *api.Project) error {
+	deps, err := project.ProjectDependencies(p)
 	if err != nil {
 		return err
 	}
@@ -32,7 +24,7 @@ func ListDependencies(project *Project) error {
 }
 
 // Display deps in an ascii table
-func RenderDepsAsTable(deps []Dependency, output io.Writer) {
+func RenderDepsAsTable(deps []api.Dependency, output io.Writer) {
 	// Display deps in an ascii table
 	table := tablewriter.NewWriter(output)
 	// TODO: Add a "type" header in deps have more than 1 type

@@ -1,15 +1,16 @@
 package commands
 
 import (
-	"github.com/gemnasium/toolbelt/models"
 	"github.com/urfave/cli"
+	"github.com/gemnasium/toolbelt/project"
+	"github.com/gemnasium/toolbelt/dependency"
 )
 
 func DependenciesList(ctx *cli.Context) error {
-	project, err := models.GetProject(ctx.Args().First())
+	p, err := project.GetProject(ctx.Args().First())
 	if err != nil {
 		return err
 	}
-	err = models.ListDependencies(project)
+	err = dependency.ListDependencies(p)
 	return err
 }

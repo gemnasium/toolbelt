@@ -1,7 +1,6 @@
-package models
+package project
 
 import (
-	"bufio"
 	"errors"
 	"fmt"
 	"io"
@@ -10,35 +9,19 @@ import (
 	"strconv"
 
 	"github.com/gemnasium/toolbelt/config"
-	"github.com/gemnasium/toolbelt/gemnasium"
 	"github.com/gemnasium/toolbelt/utils"
 	"github.com/olekukonko/tablewriter"
 	"github.com/wsxiaoys/terminal/color"
 	"gopkg.in/yaml.v1"
+	"github.com/gemnasium/toolbelt/api"
+	"bufio"
 )
-
-type Project struct {
-	Name              string `json:"name,omitempty"`
-	Slug              string `json:"slug,omitempty"`
-	Description       string `json:"description,omitempty"`
-	Origin            string `json:"origin,omitempty"`
-	Private           bool   `json:"private,omitempty"`
-	Color             string `json:"color,omitempty"`
-	Monitored         bool   `json:"monitored,omitempty"`
-	UnmonitoredReason string `json:"unmonitored_reason,omitempty"`
-	CommitSHA         string `json:"commit_sha"`
-}
 
 // List projects on gemnasium
 // TODO: Add a flag to display unmonitored projects too
-func ListProjects(privateProjectsOnly bool) error {
-	var projects map[string][]Project
-	opts := &gemnasium.APIRequestOptions{
-		Method: "GET",
-		URI:    "/projects",
-		Result: &projects,
-	}
-	err := gemnasium.APIRequest(opts)
+func ListProjects(privateProjectsOnly bool) (err error) {
+	var projects map[string][]api.Project
+	projects, err = api.APIImpl.ProjectList(privateProjectsOnly)
 	if err != nil {
 		return err
 	}
@@ -72,8 +55,8 @@ func ListProjects(privateProjectsOnly bool) error {
 
 // Display project details
 // http://docs.gemnasium.apiary.io/#get-%2Fprojects%2F%7Bslug%7D
-func (p *Project) Show() error {
-	err := p.Fetch()
+func ProjectShow(p *api.Project) error {
+	err := ProjectFetch(p)
 	if err != nil {
 		return err
 	}
@@ -86,6 +69,7 @@ func (p *Project) Show() error {
 	table.SetRowLine(true)
 
 	table.Append([]string{"Slug", p.Slug})
+	table.Append([]string{"Name", p.Name})
 	table.Append([]string{"Description", p.Description})
 	table.Append([]string{"Origin", p.Origin})
 	table.Append([]string{"Private", strconv.FormatBool(p.Private)})
@@ -100,7 +84,7 @@ func (p *Project) Show() error {
 
 // Update project details
 // http://docs.gemnasium.apiary.io/#patch-%2Fprojects%2F%7Bslug%7D
-func (p *Project) Update(name, desc *string, monitored *bool) error {
+func ProjectUpdate(p *api.Project, name, desc *string, monitored *bool) error {
 	if name == nil && desc == nil && monitored == nil {
 		return errors.New("Please specify at least one thing to update (name, desc, or monitored")
 	}
@@ -115,12 +99,7 @@ func (p *Project) Update(name, desc *string, monitored *bool) error {
 	if monitored != nil {
 		update["monitored"] = *monitored
 	}
-	opts := &gemnasium.APIRequestOptions{
-		Method: "PATCH",
-		URI:    fmt.Sprintf("/projects/%s", p.Slug),
-		Body:   update,
-	}
-	err := gemnasium.APIRequest(opts)
+	err := api.APIImpl.ProjectUpdate(p, update)
 	if err != nil {
 		return err
 	}
@@ -134,7 +113,7 @@ func (p *Project) Update(name, desc *string, monitored *bool) error {
 // If no arg is provided, the user will be prompted to enter a project name.
 // http://docs.gemnasium.apiary.io/#post-%2Fprojects
 func CreateProject(projectName string, r io.Reader) error {
-	project := &Project{Name: projectName}
+	project := &api.Project{Name: projectName}
 	if project.Name == "" {
 		fmt.Printf("Enter project name: ")
 		_, err := fmt.Scanln(&project.Name)
@@ -148,14 +127,7 @@ func CreateProject(projectName string, r io.Reader) error {
 	project.Description = scanner.Text()
 	fmt.Println("") // quickfix for goconvey
 
-	var jsonResp map[string]interface{}
-	opts := &gemnasium.APIRequestOptions{
-		Method: "POST",
-		URI:    "/projects",
-		Body:   project,
-		Result: &jsonResp,
-	}
-	err := gemnasium.APIRequest(opts)
+	jsonResp, err := api.APIImpl.ProjectCreate(project)
 	if err != nil {
 		return err
 	}
@@ -166,7 +138,7 @@ func CreateProject(projectName string, r io.Reader) error {
 }
 
 // Create a project config gile (.gemnasium.yml)
-func (p *Project) Configure(slug string, r io.Reader, w io.Writer) error {
+func ProjectConfigure(p *api.Project, slug string, r io.Reader, w io.Writer) error {
 	if slug == "" {
 		fmt.Printf("Enter project slug: ")
 		_, err := fmt.Scanln(&slug)
@@ -192,12 +164,8 @@ func (p *Project) Configure(slug string, r io.Reader, w io.Writer) error {
 
 // Start project synchronization
 // http://docs.gemnasium.apiary.io/#post-%2Fprojects%2F%7Bslug%7D%2Fsync
-func (p *Project) Sync() error {
-	opts := &gemnasium.APIRequestOptions{
-		Method: "POST",
-		URI:    fmt.Sprintf("/projects/%s/sync", p.Slug),
-	}
-	err := gemnasium.APIRequest(opts)
+func ProjectSync(p *api.Project) (err error) {
+	err = api.APIImpl.ProjectSync(p)
 	if err != nil {
 		return err
 	}
@@ -206,39 +174,25 @@ func (p *Project) Sync() error {
 	return nil
 }
 
-func (p *Project) Fetch() error {
-	opts := &gemnasium.APIRequestOptions{
-		Method: "GET",
-		URI:    fmt.Sprintf("/projects/%s", p.Slug),
-		Result: p,
-	}
-	return gemnasium.APIRequest(opts)
+func ProjectFetch(p *api.Project) (err error) {
+	err = api.APIImpl.ProjectFetch(p)
+	return err
 }
 
-func (p *Project) Dependencies() (deps []Dependency, err error) {
-	opts := &gemnasium.APIRequestOptions{
-		Method: "GET",
-		URI:    fmt.Sprintf("/projects/%s/dependencies", p.Slug),
-		Result: &deps,
-	}
-	err = gemnasium.APIRequest(opts)
+func ProjectDependencies(p *api.Project) (deps []api.Dependency, err error) {
+	deps, err = api.APIImpl.ProjectGetDependencies(p)
 	return deps, err
 }
 
 // Fetch and return the dependency files ([]DependecyFile) for the current project
-func (p *Project) DependencyFiles() (dfiles []DependencyFile, err error) {
-	opts := &gemnasium.APIRequestOptions{
-		Method: "GET",
-		URI:    fmt.Sprintf("/projects/%s/dependency_files", p.Slug),
-		Result: &dfiles,
-	}
-	err = gemnasium.APIRequest(opts)
+func ProjectDependencyFiles(p *api.Project) (dfiles []api.DependencyFile, err error) {
+	dfiles, err = api.APIImpl.ProjectGetDependencyFiles(p)
 	return dfiles, err
 }
 
 // Return a new Project with Slug set.
 // The slugs in param are tried in order.
-func GetProject(slugs ...string) (*Project, error) {
+func GetProject(slugs ...string) (*api.Project, error) {
 	slug := config.ProjectSlug
 	for _, s := range slugs {
 		if s != "" {
@@ -248,5 +202,5 @@ func GetProject(slugs ...string) (*Project, error) {
 	if slug == "" {
 		return nil, errors.New("[project slug] can't be empty")
 	}
-	return &Project{Slug: slug}, nil
+	return &api.Project{Slug: slug}, nil
 }

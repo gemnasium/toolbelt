@@ -1,23 +1,16 @@
 package liveeval
 
 import (
-	"encoding/json"
 	"fmt"
-	"io/ioutil"
-	"net/http"
 	"os"
 	"strings"
 	"time"
 
 	"github.com/gemnasium/toolbelt/config"
-	"github.com/gemnasium/toolbelt/gemnasium"
-	"github.com/gemnasium/toolbelt/models"
 	"github.com/gemnasium/toolbelt/utils"
 	"github.com/wsxiaoys/terminal/color"
-)
-
-const (
-	LIVE_EVAL_PATH = "/evaluate"
+	"github.com/gemnasium/toolbelt/api"
+	"github.com/gemnasium/toolbelt/dependency"
 )
 
 // Live evaluation of dependency files Several files can be sent, not only from
@@ -26,60 +19,24 @@ const (
 // their color.
 func LiveEvaluation(files []string) error {
 
-	dfiles, err := models.LookupDependencyFiles(files)
+	dfiles, err := dependency.LookupDependencyFiles(files)
 	if err != nil {
 		return err
 	}
 
-	requestDeps := map[string][]*models.DependencyFile{"dependency_files": dfiles}
-	var jsonResp map[string]interface{}
+	requestDeps := map[string][]*api.DependencyFile{"dependency_files": dfiles}
 
-	opts := &gemnasium.APIRequestOptions{
-		Method: "POST",
-		URI:    LIVE_EVAL_PATH,
-		Body:   requestDeps,
-		Result: &jsonResp,
-	}
-	err = gemnasium.APIRequest(opts)
+	jsonResp, err := api.APIImpl.LiveEvalStart(requestDeps)
 	if err != nil {
 		return err
 	}
 
 	// Wait until job is done
-	url := fmt.Sprintf("%s%s/%s", config.APIEndpoint, LIVE_EVAL_PATH, jsonResp["job_id"])
-	req, err := http.NewRequest("GET", url, nil)
-	if err != nil {
-		return err
-	}
-	req.SetBasicAuth("x", config.APIKey)
-	req.Header.Add("Content-Type", "application/json")
-	var response struct {
-		Status string `json:"status"`
-		Result struct {
-			RuntimeStatus     string              `json:"runtime_status"`
-			DevelopmentStatus string              `json:"development_status"`
-			Dependencies      []models.Dependency `json:"dependencies"`
-		} `json:"result"`
-	}
+	var response api.LiveEvalResponse
 	var iter int // used to display the little dots for each loop bellow
-	client := &http.Client{}
 	for {
-		// use the same request again and again
-		resp, err := client.Do(req)
+		response, body, err := api.APIImpl.LiveEvalGetResponse(jsonResp["job_id"])
 		if err != nil {
-			return err
-		}
-		defer resp.Body.Close()
-		body, err := ioutil.ReadAll(resp.Body)
-		if err != nil {
-			return err
-		}
-
-		if resp.StatusCode != http.StatusOK {
-			response.Status = "error"
-		}
-
-		if err = json.Unmarshal(body, &response); err != nil {
 			return err
 		}
 
@@ -102,7 +59,7 @@ func LiveEvaluation(files []string) error {
 	color.Println(fmt.Sprintf("%-12.12s %s\n\n", "Dev. Status", utils.StatusDots(response.Result.DevelopmentStatus)))
 
 	// Display deps in an ascii table
-	models.RenderDepsAsTable(response.Result.Dependencies, os.Stdout)
+	dependency.RenderDepsAsTable(response.Result.Dependencies, os.Stdout)
 
 	if response.Result.RuntimeStatus == "red" {
 		return fmt.Errorf("There are important updates available.\n")

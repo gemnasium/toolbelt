@@ -1,7 +1,6 @@
 package auth
 
 import (
-	"encoding/json"
 	"errors"
 	"os"
 	"path/filepath"
@@ -10,15 +9,13 @@ import (
 	"github.com/bgentry/speakeasy"
 	"github.com/gemnasium/toolbelt/config"
 	"github.com/gemnasium/toolbelt/utils"
+	"github.com/gemnasium/toolbelt/api"
 	"github.com/heroku/hk/term"
 	"github.com/urfave/cli"
 
-	"bytes"
 	"fmt"
 	"io/ioutil"
-	"net/http"
 	"net/url"
-	"strings"
 )
 
 const (
@@ -34,32 +31,12 @@ func Login() error {
 		return err
 	}
 
-	loginAsJson, err := json.Marshal(map[string]string{"email": email, "password": password})
-	if err != nil {
-		return err
-	}
-	resp, err := http.Post(config.APIEndpoint+LOGIN_PATH, "application/json", bytes.NewReader(loginAsJson))
-	if err != nil {
-		return err
-	}
-	defer resp.Body.Close()
-	if resp.StatusCode != http.StatusOK {
-		return fmt.Errorf("Server returned non-200 status: %v\n", resp.Status)
-	}
-
-	// Read api token from response
-	// body will be of the form:
-	// {"api_token": "abcxzy123"}
-
-	var response_body map[string]string
-	err = json.NewDecoder(resp.Body).Decode(&response_body)
+	err = api.APIImpl.Login(email, password)
 	if err != nil {
 		return err
 	}
 
-	api_token := response_body["api_token"]
-
-	err = saveCreds(strings.Split(resp.Request.Host, ":")[0], email, api_token)
+	err = saveCreds(api.APIImpl.Host(), email, api.APIImpl.Key())
 	if err != nil {
 		utils.PrintFatal("saving new token: " + err.Error())
 	}
@@ -71,11 +48,7 @@ func Login() error {
 // Logout doesn't hit the API of course.
 // It simply removes the corresponding entry in ~/.netrc
 func Logout() error {
-	api_url, err := url.Parse(config.APIEndpoint)
-	if err != nil {
-		return err
-	}
-	err = removeCreds(api_url.Host)
+	err := removeCreds(api.APIImpl.Host())
 	if err != nil {
 		return err
 	}
@@ -112,8 +85,8 @@ func readPassword(prompt string) (password string, err error) {
 // Each source will override previous one (token flag has priority above all).
 //
 // WARNING: Directly exit the programm in case of error
-func AttemptLogin(ctx *cli.Context) error {
-	// APIKey has been set localy in config file
+func ConfigureAPIToken(ctx *cli.Context) error {
+	// APIKey has been set localy in APIconfig file
 	if config.APIKey == "" {
 		_, config.APIKey = getCreds()
 	}
@@ -122,6 +95,8 @@ func AttemptLogin(ctx *cli.Context) error {
 		// Try to fetch token from command line
 		config.APIKey = ctx.GlobalString("token")
 	}
+	// Configure the API instance with the chosen token
+	api.APIImpl.SetKey(config.APIKey)
 	if config.APIKey == "" {
 		return ErrEmptyToken
 	}
@@ -190,7 +165,7 @@ func getCreds() (user, pass string) {
 		return "", ""
 	}
 
-	apiURL, err := url.Parse(config.APIEndpoint)
+	apiURL, err := url.Parse(api.APIImpl.Endpoint())
 	if err != nil {
 		utils.PrintFatal("invalid API URL: %s", err)
 	}

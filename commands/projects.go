@@ -3,27 +3,27 @@ package commands
 import (
 	"os"
 
-	"github.com/gemnasium/toolbelt/models"
 	"github.com/urfave/cli"
+	"github.com/gemnasium/toolbelt/project"
 )
 
 func ProjectsList(ctx *cli.Context) error {
-	err := models.ListProjects(ctx.Bool("private"))
+	err := project.ListProjects(ctx.Bool("private"))
 	return err
 }
 
 func ProjectsShow(ctx *cli.Context) error {
-	project, err := models.GetProject(ctx.Args().First())
+	p, err := project.GetProject(ctx.Args().First())
 	if err != nil {
 		return err
 	}
 
-	err = project.Show()
+	err = project.ProjectShow(p)
 	return err
 }
 
 func ProjectsUpdate(ctx *cli.Context) error {
-	project, err := models.GetProject(ctx.Args().First())
+	p, err := project.GetProject(ctx.Args().First())
 	if err != nil {
 		return err
 	}
@@ -41,23 +41,23 @@ func ProjectsUpdate(ctx *cli.Context) error {
 		mon := ctx.Bool("monitored")
 		monitored = &mon
 	}
-	err = project.Update(name, desc, monitored)
+	err = project.ProjectUpdate(p, name, desc, monitored)
 	return err
 }
 
 func ProjectsCreate(ctx *cli.Context) error {
 	projectName := ctx.Args().First()
 	// will scan from os.Stding if projectName is empty
-	err := models.CreateProject(projectName, os.Stdin)
+	err := project.CreateProject(projectName, os.Stdin)
 	return err
 }
 
 func ProjectsSync(ctx *cli.Context) error {
-	project, err := models.GetProject(ctx.Args().First())
+	p, err := project.GetProject(ctx.Args().First())
 	if err != nil {
 		return err
 	}
 
-	err = project.Sync()
+	err = project.ProjectSync(p)
 	return err
 }

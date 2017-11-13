@@ -10,7 +10,8 @@ import (
 	"strings"
 
 	"github.com/gemnasium/toolbelt/config"
-	"github.com/gemnasium/toolbelt/models"
+	"github.com/gemnasium/toolbelt/api"
+	"github.com/gemnasium/toolbelt/dependency"
 )
 
 const (
@@ -22,7 +23,7 @@ var (
 	cantFindInstaller       = "Can't find installer for package type: %s\n"
 )
 
-type InstallRequirementsFunc func([]RequirementUpdate, *[]models.DependencyFile, *[]models.DependencyFile) error
+type InstallRequirementsFunc func([]api.RequirementUpdate, *[]api.DependencyFile, *[]api.DependencyFile) error
 
 var installers = map[string]InstallRequirementsFunc{
 	"Rubygem": RubygemsInstaller,
@@ -35,7 +36,7 @@ func NewRequirementsInstaller(packageType string) (InstallRequirementsFunc, erro
 	return nil, fmt.Errorf(cantFindInstaller, packageType)
 }
 
-func RubygemsInstaller(reqUpdates []RequirementUpdate, orgDepFiles, uptDepFiles *[]models.DependencyFile) error {
+func RubygemsInstaller(reqUpdates []api.RequirementUpdate, orgDepFiles, uptDepFiles *[]api.DependencyFile) error {
 	for _, ru := range reqUpdates {
 		err := PatchFile(ru, orgDepFiles, uptDepFiles)
 		if err != nil {
@@ -82,20 +83,20 @@ func RubygemsInstaller(reqUpdates []RequirementUpdate, orgDepFiles, uptDepFiles 
 }
 
 // Should be common to other updaters
-func PatchFile(ru RequirementUpdate, orgDepFiles, uptDepFiles *[]models.DependencyFile) error {
-	var f models.DependencyFile = ru.File
-	err := f.CheckFileSHA1()
+func PatchFile(ru api.RequirementUpdate, orgDepFiles, uptDepFiles *[]api.DependencyFile) error {
+	var f = &ru.File
+	err := dependency.DependencyFileCheckFileSHA1(f)
 	if err != nil {
 		return err
 	}
 	// fetch file content
-	f.Update()
-	*orgDepFiles = append(*orgDepFiles, f)
+	dependency.DependencyFileUpdate(f)
+	*orgDepFiles = append(*orgDepFiles, *f)
 	fmt.Println("Patching", f.Path)
-	err = f.Patch(ru.Patch)
+	err = dependency.DependencyFilePatch(f, ru.Patch)
 	if err != nil {
 		return err
 	}
-	*uptDepFiles = append(*uptDepFiles, f)
+	*uptDepFiles = append(*uptDepFiles, *f)
 	return nil
 }

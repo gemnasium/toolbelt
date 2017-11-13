@@ -9,8 +9,7 @@ import (
 	"reflect"
 	"testing"
 
-	"github.com/gemnasium/toolbelt/config"
-	"github.com/gemnasium/toolbelt/models"
+	"github.com/gemnasium/toolbelt/api"
 )
 
 func TestFetchUpdateSet(t *testing.T) {
@@ -21,13 +20,13 @@ func TestFetchUpdateSet(t *testing.T) {
 		fmt.Fprintln(w, jsonOutput)
 	}))
 	defer ts.Close()
-	config.APIEndpoint = ts.URL
-	expectedUpdateSet := &UpdateSet{
+	api.APIImpl = api.NewAPIv1(ts.URL, "")
+	expectedUpdateSet := &api.UpdateSet{
 		ID: 1,
-		RequirementUpdates: map[string][]RequirementUpdate{
-			"Rubygem": []RequirementUpdate{
-				RequirementUpdate{
-					File: models.DependencyFile{
+		RequirementUpdates: map[string][]api.RequirementUpdate{
+			"Rubygem": []api.RequirementUpdate{
+				api.RequirementUpdate{
+					File: api.DependencyFile{
 						Path: "Gemfile",
 						SHA:  "dc6bdc865c85a4f5c6ef0f4ba8909d8652fd8cd0",
 					},
@@ -35,7 +34,7 @@ func TestFetchUpdateSet(t *testing.T) {
 				},
 			},
 		},
-		VersionUpdates: map[string][]VersionUpdate{},
+		VersionUpdates: map[string][]api.VersionUpdate{},
 	}
 
 	resultSet, err := fetchUpdateSet("blah")
@@ -48,8 +47,8 @@ func TestFetchUpdateSet(t *testing.T) {
 }
 
 func TestRestoreDepFiles(t *testing.T) {
-	gemfile := models.DependencyFile{Path: "Gemfile", Content: []byte("Gemfile content")}
-	dfiles := []models.DependencyFile{gemfile}
+	gemfile := api.DependencyFile{Path: "Gemfile", Content: []byte("Gemfile content")}
+	dfiles := []api.DependencyFile{gemfile}
 	err := restoreDepFiles(dfiles)
 	if err != nil {
 		t.Fatal(err)
@@ -66,8 +65,8 @@ func TestRestoreDepFiles(t *testing.T) {
 }
 
 func TestRestoreDepFilesWithInvalidPath(t *testing.T) {
-	gemfile := models.DependencyFile{Path: "", Content: []byte("Gemfile content")}
-	dfiles := []models.DependencyFile{gemfile}
+	gemfile := api.DependencyFile{Path: "", Content: []byte("Gemfile content")}
+	dfiles := []api.DependencyFile{gemfile}
 	err := restoreDepFiles(dfiles)
 	if err == nil {
 		t.Error("restoreDepFiles should fail")
@@ -75,9 +74,9 @@ func TestRestoreDepFilesWithInvalidPath(t *testing.T) {
 	fmt.Println() // Hack for goconvey
 }
 
-func fakeInstaller(reqUpdates []RequirementUpdate, orgDepFiles, uptDepFiles *[]models.DependencyFile) error {
+func fakeInstaller(reqUpdates []api.RequirementUpdate, orgDepFiles, uptDepFiles *[]api.DependencyFile) error {
 	for _, ru := range reqUpdates {
-		var f models.DependencyFile = ru.File
+		var f = ru.File
 		f.Content = []byte("original content")
 		*orgDepFiles = append(*orgDepFiles, f)
 		fmt.Println("Patching", f.Path)
@@ -87,8 +86,8 @@ func fakeInstaller(reqUpdates []RequirementUpdate, orgDepFiles, uptDepFiles *[]m
 	return nil
 }
 
-func fakeUpdater(versionUpdates []VersionUpdate, orgDepFiles, uptDepFiles *[]models.DependencyFile) error {
-	f := models.DependencyFile{Path: "Gemfile.lock", SHA: "09c2f8647e14e49e922b955c194102070597c2d1", Content: []byte("original content")}
+func fakeUpdater(versionUpdates []api.VersionUpdate, orgDepFiles, uptDepFiles *[]api.DependencyFile) error {
+	f := api.DependencyFile{Path: "Gemfile.lock", SHA: "09c2f8647e14e49e922b955c194102070597c2d1", Content: []byte("original content")}
 	*orgDepFiles = append(*orgDepFiles, f)
 	f.Content = []byte("updated content")
 	f.SHA = "141162477fd3bf27aed3bbea4fe3d17c71d6c7be"
@@ -101,12 +100,12 @@ func TestApplyUpdateSet(t *testing.T) {
 	installers["fakePackage"] = fakeInstaller
 	updaters["fakePackage"] = fakeUpdater
 
-	updateSet := &UpdateSet{
+	updateSet := &api.UpdateSet{
 		ID: 1,
-		RequirementUpdates: map[string][]RequirementUpdate{
-			"fakePackage": []RequirementUpdate{
-				RequirementUpdate{
-					File: models.DependencyFile{
+		RequirementUpdates: map[string][]api.RequirementUpdate{
+			"fakePackage": []api.RequirementUpdate{
+				api.RequirementUpdate{
+					File: api.DependencyFile{
 						Path: "Gemfile",
 						SHA:  "dc6bdc865c85a4f5c6ef0f4ba8909d8652fd8cd0",
 					},
@@ -114,10 +113,10 @@ func TestApplyUpdateSet(t *testing.T) {
 				},
 			},
 		},
-		VersionUpdates: map[string][]VersionUpdate{
-			"fakePackage": []VersionUpdate{
-				VersionUpdate{
-					Package:       models.Package{Name: "aGem", Slug: "aGem", Type: "fakePackage"},
+		VersionUpdates: map[string][]api.VersionUpdate{
+			"fakePackage": []api.VersionUpdate{
+				api.VersionUpdate{
+					Package:       api.Package{Name: "aGem", Slug: "aGem", Type: "fakePackage"},
 					OldVersion:    "1.2.3",
 					TargetVersion: "1.2.5",
 				},
@@ -128,13 +127,13 @@ func TestApplyUpdateSet(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	expOrgDepFiles := []models.DependencyFile{
-		models.DependencyFile{Path: "Gemfile", SHA: "dc6bdc865c85a4f5c6ef0f4ba8909d8652fd8cd0", Content: []byte("original content")},
-		models.DependencyFile{Path: "Gemfile.lock", SHA: "09c2f8647e14e49e922b955c194102070597c2d1", Content: []byte("original content")},
+	expOrgDepFiles := []api.DependencyFile{
+		api.DependencyFile{Path: "Gemfile", SHA: "dc6bdc865c85a4f5c6ef0f4ba8909d8652fd8cd0", Content: []byte("original content")},
+		api.DependencyFile{Path: "Gemfile.lock", SHA: "09c2f8647e14e49e922b955c194102070597c2d1", Content: []byte("original content")},
 	}
-	expUptDepFiles := []models.DependencyFile{
-		models.DependencyFile{Path: "Gemfile", SHA: "dc6bdc865c85a4f5c6ef0f4ba8909d8652fd8cd0", Content: []byte("New content")},
-		models.DependencyFile{Path: "Gemfile.lock", SHA: "141162477fd3bf27aed3bbea4fe3d17c71d6c7be", Content: []byte("updated content")},
+	expUptDepFiles := []api.DependencyFile{
+		api.DependencyFile{Path: "Gemfile", SHA: "dc6bdc865c85a4f5c6ef0f4ba8909d8652fd8cd0", Content: []byte("New content")},
+		api.DependencyFile{Path: "Gemfile.lock", SHA: "141162477fd3bf27aed3bbea4fe3d17c71d6c7be", Content: []byte("updated content")},
 	}
 	if !reflect.DeepEqual(orgDepFiles, expOrgDepFiles) {
 		t.Errorf("Expectd orgDepFiles to be: %#v, got: %#v", expOrgDepFiles, orgDepFiles)

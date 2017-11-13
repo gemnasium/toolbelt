@@ -1,4 +1,4 @@
-package models
+package dependency
 
 import (
 	"bytes"
@@ -9,7 +9,7 @@ import (
 	"os"
 	"testing"
 
-	"github.com/gemnasium/toolbelt/config"
+	"github.com/gemnasium/toolbelt/api"
 )
 
 func TestListDependencies(t *testing.T) {
@@ -62,8 +62,8 @@ func TestListDependencies(t *testing.T) {
 	old := os.Stdout // keep backup of the real stdout
 	r, w, _ := os.Pipe()
 	os.Stdout = w
-	config.APIEndpoint = ts.URL
-	ListDependencies(&Project{Slug: "blah"})
+	api.APIImpl = api.NewAPIv1(ts.URL, "")
+	ListDependencies(&api.Project{Slug: "blah"})
 	w.Close()
 	var buf bytes.Buffer
 	io.Copy(&buf, r)

@@ -9,7 +9,8 @@ import (
 	"strings"
 
 	"github.com/gemnasium/toolbelt/config"
-	"github.com/gemnasium/toolbelt/models"
+	"github.com/gemnasium/toolbelt/api"
+	"github.com/gemnasium/toolbelt/dependency"
 )
 
 const (
@@ -27,7 +28,7 @@ var (
 // will be used to generate a full patch for the user. These slices have to be
 // references, as in case of failure during the update, the files still need to
 // be restored.
-type UpdateFunc func([]VersionUpdate, *[]models.DependencyFile, *[]models.DependencyFile) error
+type UpdateFunc func([]api.VersionUpdate, *[]api.DependencyFile, *[]api.DependencyFile) error
 
 var updaters = map[string]UpdateFunc{
 	"Rubygem": RubygemsUpdater,
@@ -40,10 +41,10 @@ func NewUpdater(packageType string) (UpdateFunc, error) {
 	return nil, fmt.Errorf(cantFindUpdater, packageType)
 }
 
-func RubygemsUpdater(versionUpdates []VersionUpdate, orgDepFiles, uptDepFiles *[]models.DependencyFile) error {
+func RubygemsUpdater(versionUpdates []api.VersionUpdate, orgDepFiles, uptDepFiles *[]api.DependencyFile) error {
 	// we're going to update gemfile.lock, let's save it to later restoration
-	GemfileLock := models.NewDependencyFile("Gemfile.lock")
-	*orgDepFiles = append(*orgDepFiles, *GemfileLock)
+	gemfileLock := dependency.NewDependencyFile("Gemfile.lock")
+	*orgDepFiles = append(*orgDepFiles, *gemfileLock)
 
 	upt := BUNDLE_UPDATE_CMD
 	if uptEnv := os.Getenv(config.ENV_GEMNASIUM_BUNDLE_UPDATE_CMD); uptEnv != "" {
@@ -66,8 +67,8 @@ func RubygemsUpdater(versionUpdates []VersionUpdate, orgDepFiles, uptDepFiles *[
 		fmt.Printf("%s\n", out)
 		return err
 	}
-	GemfileLock.Update()
-	*uptDepFiles = append(*uptDepFiles, *GemfileLock)
+	dependency.DependencyFileUpdate(gemfileLock)
+	*uptDepFiles = append(*uptDepFiles, *gemfileLock)
 
 	return nil
 }

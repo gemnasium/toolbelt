@@ -143,17 +143,65 @@ func (a *APIv2) Login(email, password string) (err error) {
 		return fmt.Errorf("Server returned non-200 status: %v\n", resp.Status)
 	}
 
-	// Read api token from response
-	// body will be of the form:
-	// {"api_token": "abcxzy123"}
+	// Read api jwt token from response
 	var response_body map[string]string
 	err = json.NewDecoder(resp.Body).Decode(&response_body)
 	if err != nil {
 		return err
 	}
-
 	//Login successfull
 	a.jwt = response_body["jwt"]
+
+	// Now we need to fetch the user's API key, this is what we use to access the API
+	user := V2User{}
+
+	// Prepare request to the API
+	url := fmt.Sprintf("%s%s", a.endpoint, "/user")
+	req, err := http.NewRequest("GET", url, nil)
+	if err != nil {
+		return err
+	}
+	req.Header.Add("Content-Type", "application/json")
+	req.Header.Add("X-Gms-Client-Version", config.VERSION)
+	req.Header.Add("X-Gms-Revision", utils.GetCurrentRevision())
+	req.Header.Add("X-Gms-Branch", utils.GetCurrentBranch())
+	// Add the JWT Authorization header
+	req.Header.Add("Authorization", fmt.Sprintf("Bearer %s", a.jwt))
+	if err != nil {
+		return err
+	}
+	// Access API
+	client := &http.Client{}
+	resp, err = client.Do(req)
+	if err != nil {
+		return err
+	}
+	defer resp.Body.Close()
+
+	body, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		return err
+	}
+
+	if resp.StatusCode != http.StatusOK && resp.StatusCode != http.StatusNoContent {
+		// Request failed
+		type errMsg struct {
+			Message string `json:"message"`
+		}
+		em := &errMsg{}
+		if err := json.Unmarshal(body, &em); err != nil {
+			return fmt.Errorf("%s: %s\n", resp.Status, err)
+		}
+		return fmt.Errorf("Error: %s (status=%d)\n", em.Message, resp.StatusCode)
+	}
+
+	// Get user struct from response
+	if err = json.Unmarshal(body, &user); err != nil {
+		return err
+	}
+	// Get API Key field
+	a.key = user.APIKey
+
 	return nil
 }
 

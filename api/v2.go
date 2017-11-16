@@ -13,24 +13,15 @@ import (
 )
 
 type APIv2 struct {
-	LOGIN_PATH string
-	LIVE_EVAL_PATH string
-	VERSION string
 	endpoint string
 	key string
 	jwt string
 	host string
 }
 
-var defaultAPIv2 = APIv2{
-	LOGIN_PATH: "/login",
-	LIVE_EVAL_PATH: "/evaluate",
-}
-
 // APIv2 constructor
 func NewAPIv2(endpoint string, key string) (api *APIv2) {
 	newAPIv2 := new(APIv2)
-	*newAPIv2 = defaultAPIv2
 	h, err := getHost(endpoint)
 	if err != nil {
 		fmt.Println(err)
@@ -134,7 +125,7 @@ func (a *APIv2) Login(email, password string) (err error) {
 	if err != nil {
 		return err
 	}
-	resp, err := http.Post(a.endpoint+a.LOGIN_PATH, "application/json", bytes.NewReader(loginAsJson))
+	resp, err := http.Post(a.endpoint+"/login", "application/json", bytes.NewReader(loginAsJson))
 	if err != nil {
 		return err
 	}
@@ -265,7 +256,7 @@ func (a *APIv2) DependencyFilesPush(projectSlug string, dfiles []*V2DependencyFi
 func (a *APIv2) LiveEvalStart(requestDeps map[string][]*DependencyFile) (jsonResp map[string]interface{}, err error) {
 	opts := &requestOptions{
 		Method: "POST",
-		URI:    a.LIVE_EVAL_PATH,
+		URI:    "/evaluate",
 		Body:   requestDeps,
 		Result: &jsonResp,
 	}
@@ -274,7 +265,7 @@ func (a *APIv2) LiveEvalStart(requestDeps map[string][]*DependencyFile) (jsonRes
 }
 
 func (a *APIv2) LiveEvalGetResponse(jobId interface{}) (response LiveEvalResponse, body []byte, err error) {
-	url := fmt.Sprintf("%s%s/%s", a.endpoint, a.LIVE_EVAL_PATH, jobId)
+	url := fmt.Sprintf("%s%s/%s", a.endpoint, "/evaluate", jobId)
 	req, err := http.NewRequest("GET", url, nil)
 	if err != nil {
 		return response, body, err

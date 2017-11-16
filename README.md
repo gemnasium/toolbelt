@@ -81,7 +81,7 @@ The corresponding project will updated soon after the files have been received. 
     gemnasium dependency_files push -f=Gemfile,Gemfile.lock
 
 
-### Live Evaluation (Only available on gemnasium.com API v1 for now)
+### Live Evaluation (Available soon for Gemnasium enterprise)
 
 If you want to evaluate your project without pushing files or pulling info from Gemnasium, you may use the ```eval``` command:
 
@@ -91,7 +91,7 @@ The command will exit with a code 1 if the project global status is "red".
 
 **A Gold subscription is required to use Live Evaluation.**
 
-### Auto Update (Only available on gemnasium.com API v1 for now)
+### Auto Update (Available soon for Gemnasium enterprise)
 
 Auto-Update will fetch update sets from Gemnasium and run your test suite against them.
 The test suite can be passed as arguments, or through the env var GEMNASIUM_TESTSUITE.

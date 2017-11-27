@@ -63,12 +63,13 @@ func App() *cli.App {
 				{
 					Name:   "login",
 					Usage:  "Login",
+					Flags: []cli.Flag{
+						cli.StringFlag{
+							Name: "with-api-token",
+							Usage: "Log in with your API token (API key in the user profile)",
+						},
+					},
 					Action: Login,
-				},
-				{
-					Name:   "with-api-token",
-					Usage:  "Login with your API token (API Key in your profile page)",
-					Action: LoginWithAPIToken,
 				},
 				{
 					Name:   "logout",

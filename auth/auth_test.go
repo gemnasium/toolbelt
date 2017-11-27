@@ -70,8 +70,11 @@ func TestLogin(t *testing.T) {
 
 	api.APIImpl = api.NewAPIv1(ts.URL, "")
 	// don't try to use stdin
-	getCredentials = func() (email, password string, err error) {
-		return "batman@example.com", "secret123", nil
+	getEmail = func() (email string) {
+		return "batman@example.com"
+	}
+	getPassword = func(prompt string) (password string, err error) {
+		return "secret123", nil
 	}
 
 	netrcFile := bytes.NewBufferString("")

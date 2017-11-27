@@ -26,7 +26,8 @@ const (
 // An entry will be created in ~/.netrc on successful login.
 func Login() error {
 	// Create a function to be overriden in tests
-	email, password, err := getCredentials()
+	email := getEmail()
+	password, err := getPassword("Enter password (will be hidden): ")
 	if err != nil {
 		return err
 	}
@@ -47,9 +48,9 @@ func Login() error {
 
 // Login with the user email and API token
 // An entry will be created in ~/.netrc on successful login.
-func LoginWithAPIToken() error {
+func LoginWithAPIToken(token string) (err error) {
 	// Create a function to be overriden in tests
-	email, token, err := getTokenCredentials()
+	email := getEmail()
 	if err != nil {
 		return err
 	}
@@ -81,26 +82,20 @@ func Logout() error {
 }
 
 // Lambda to be overriden in tests
-var getCredentials = func() (email, password string, err error) {
+var getEmail = func() (email string) {
 	fmt.Printf("Enter your email: ")
 	fmt.Scanf("%s", &email)
-	// NOTE: gopass doesn't support multi-byte chars on Windows
-	password, err = readPassword("Enter password (will be hidden): ")
-	if err != nil {
-		return "", "", err
-	}
-	return email, password, nil
+	return email
 }
 
-var getTokenCredentials = func() (email, token string, err error) {
-	fmt.Printf("Enter your email: ")
-	fmt.Scanf("%s", &email)
+// Lambda to be overriden in tests
+var getPassword = func(prompt string) (password string, err error) {
 	// NOTE: gopass doesn't support multi-byte chars on Windows
-	token, err = readPassword("Enter your token (API Key, it will be hidden) : ")
+	password, err = readPassword(prompt)
 	if err != nil {
-		return "", "", err
+		return "", err
 	}
-	return email, token, nil
+	return password, nil
 }
 
 func readPassword(prompt string) (password string, err error) {

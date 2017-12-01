@@ -4,6 +4,9 @@ import (
 	"github.com/gemnasium/toolbelt/auth"
 	"github.com/gemnasium/toolbelt/config"
 	"github.com/urfave/cli"
+	"github.com/gemnasium/toolbelt/api"
+	"fmt"
+	"os"
 )
 
 func App() *cli.App {
@@ -22,9 +25,34 @@ func App() *cli.App {
 			Name:  "raw, r",
 			Usage: "Raw format output",
 		},
+		cli.IntFlag{
+			Name:  "api-version",
+			Usage: "API version to use (default: autodetected)",
+		},
 	}
 	app.Before = func(c *cli.Context) error {
 		config.RawFormat = c.Bool("raw")
+		config.APIVersion = c.Int("api-version")
+		if config.APIVersion == 0 {
+			// Set API version if it was not set by parameters
+			if config.APIEndpoint == config.DEFAULT_API_ENDPOINT {
+				config.APIVersion = 1
+			} else {
+				config.APIVersion = 2
+				if !config.RawFormat {
+					fmt.Printf("Using API v2 for endpoint %s.\n", config.APIEndpoint)
+				}
+			}
+		}
+		switch config.APIVersion {
+		case 1:
+			api.APIImpl = api.NewAPIv1(config.APIEndpoint, config.APIKey)
+		case 2:
+			api.APIImpl = &api.V2ToV1{api.NewAPIv2(config.APIEndpoint, config.APIKey)}
+		default:
+			fmt.Fprintf(os.Stderr, "Unknown API version: %d", config.APIVersion)
+		}
+
 		return nil
 	}
 	app.Commands = []cli.Command{
@@ -35,6 +63,12 @@ func App() *cli.App {
 				{
 					Name:   "login",
 					Usage:  "Login",
+					Flags: []cli.Flag{
+						cli.StringFlag{
+							Name: "with-api-token",
+							Usage: "Log in with your API token (API key in the user profile)",
+						},
+					},
 					Action: Login,
 				},
 				{
@@ -54,7 +88,7 @@ func App() *cli.App {
 			Name:      "projects",
 			ShortName: "p",
 			Usage:     "Manage current project",
-			Before:    auth.AttemptLogin,
+			Before:    auth.ConfigureAPIToken,
 			Subcommands: []cli.Command{
 				{
 					Name:      "list",
@@ -112,14 +146,14 @@ func App() *cli.App {
 			ShortName: "d",
 			Usage:     "Dependencies",
 			Before: func(ctx *cli.Context) error {
-				auth.AttemptLogin(ctx)
+				auth.ConfigureAPIToken(ctx)
 				return nil
 			},
 			Subcommands: []cli.Command{
 				{
 					Name:      "list",
 					ShortName: "l",
-					Usage:     "List the first level dependencies of the requested project. Usage: gemnasium deps list [project_slug]",
+					Usage:     "List the first level dependencies of the requested project. Usage: gemnasium dependencies list [project_slug]",
 					Action:    DependenciesList,
 				},
 			},
@@ -129,7 +163,7 @@ func App() *cli.App {
 			ShortName: "df",
 			Usage:     "Dependency files",
 			Before: func(ctx *cli.Context) error {
-				auth.AttemptLogin(ctx)
+				auth.ConfigureAPIToken(ctx)
 				return nil
 			},
 			Subcommands: []cli.Command{
@@ -159,7 +193,7 @@ func App() *cli.App {
 			ShortName: "a",
 			Usage:     "Dependency Alerts",
 			Before: func(ctx *cli.Context) error {
-				auth.AttemptLogin(ctx)
+				auth.ConfigureAPIToken(ctx)
 				return nil
 			},
 			Subcommands: []cli.Command{
@@ -187,7 +221,7 @@ func App() *cli.App {
 			Name:      "autoupdate",
 			ShortName: "au",
 			Usage:     "Auto-update the dependency files of the project",
-			Before:    auth.AttemptLogin,
+			Before:    auth.ConfigureAPIToken,
 			Subcommands: []cli.Command{
 				{
 					Name:      "run",

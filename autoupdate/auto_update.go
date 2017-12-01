@@ -15,10 +15,10 @@ import (
 	"strings"
 	"time"
 
-	"github.com/gemnasium/toolbelt/config"
-	"github.com/gemnasium/toolbelt/gemnasium"
-	"github.com/gemnasium/toolbelt/models"
 	"github.com/gemnasium/toolbelt/utils"
+	"github.com/gemnasium/toolbelt/api"
+	"github.com/gemnasium/toolbelt/config"
+	"github.com/gemnasium/toolbelt/project"
 )
 
 const (
@@ -27,29 +27,7 @@ const (
 	UPDATE_SET_FAIL    = "test_failed"
 )
 
-type RequirementUpdate struct {
-	File  models.DependencyFile `json:"file"`
-	Patch string                `json:"patch"`
-}
 
-type VersionUpdate struct {
-	Package       models.Package
-	OldVersion    string `json:"old_version"`
-	TargetVersion string `json:"target_version"`
-}
-
-type UpdateSet struct {
-	ID                 int                            `json:"id"`
-	RequirementUpdates map[string][]RequirementUpdate `json:"requirement_updates"`
-	VersionUpdates     map[string][]VersionUpdate     `json:"version_updates"`
-}
-
-type UpdateSetResult struct {
-	UpdateSetID     int                     `json:"-"`
-	ProjectSlug     string                  `json:"-"`
-	State           string                  `json:"state"`
-	DependencyFiles []models.DependencyFile `json:"dependency_files"`
-}
 
 var ErrProjectRevisionEmpty error = fmt.Errorf("The current revision (%s) is unknown on Gemnasium, please push your dependency files before running autoupdate.\nSee `gemnasium df help push`.\n", utils.GetCurrentRevision())
 
@@ -76,24 +54,19 @@ func Apply(projectSlug string, testSuite []string) error {
 }
 
 // Fetch the best dependency files that have been found so far
-func fetchDependencyFiles(projectSlug string) (dfiles []models.DependencyFile, err error) {
+func fetchDependencyFiles(projectSlug string) (dfiles []api.DependencyFile, err error) {
 	revision, err := getRevision()
 	if err != nil {
 		return nil, err
 	}
 
-	opts := &gemnasium.APIRequestOptions{
-		Method: "GET",
-		URI:    fmt.Sprintf("/projects/%s/revisions/%s/auto_update_steps/best", projectSlug, revision),
-		Result: &dfiles,
-	}
-	err = gemnasium.APIRequest(opts)
+	dfiles, err = api.APIImpl.AutoUpdateStepsBest(projectSlug, revision)
 	return dfiles, err
 }
 
 // Update dependency files with given one (best dependency files)
 // REFACTOR: this is very similar to restoreDepFiles
-func updateDepFiles(dfiles []models.DependencyFile) error {
+func updateDepFiles(dfiles []api.DependencyFile) error {
 	fmt.Printf("%d file(s) to be updated.\n", len(dfiles))
 	for _, df := range dfiles {
 		fmt.Printf("Updating file %s: ", df.Path)
@@ -142,7 +115,7 @@ func Run(projectSlug string, testSuite []string) error {
 		// We have an updateSet, let's patch files and run tests
 		// We need to keep a list of updated files to restore them after this run
 		orgDepFiles, uptDepFiles, err := applyUpdateSet(updateSet)
-		resultSet := &UpdateSetResult{UpdateSetID: updateSet.ID, ProjectSlug: projectSlug, DependencyFiles: uptDepFiles}
+		resultSet := &api.UpdateSetResult{UpdateSetID: updateSet.ID, ProjectSlug: projectSlug, DependencyFiles: uptDepFiles}
 		if err == cantInstallRequirements || err == cantUpdateVersions {
 			resultSet.State = UPDATE_SET_INVALID
 			err := pushUpdateSetResult(resultSet)
@@ -193,26 +166,20 @@ func Run(projectSlug string, testSuite []string) error {
 	return nil
 }
 
-func fetchUpdateSet(projectSlug string) (*UpdateSet, error) {
+func fetchUpdateSet(projectSlug string) (updateSet *api.UpdateSet, err error) {
 	revision, err := getRevision()
 	if err != nil {
 		return nil, err
 	}
 
-	var updateSet *UpdateSet
-	opts := &gemnasium.APIRequestOptions{
-		Method: "POST",
-		URI:    fmt.Sprintf("/projects/%s/revisions/%s/auto_update_steps/next", projectSlug, revision),
-		Result: &updateSet,
-	}
-	err = gemnasium.APIRequest(opts)
+	updateSet, err = api.APIImpl.AutoUpdateStepsNext(projectSlug, revision)
 	return updateSet, err
 }
 
 // Patch files if needed, and update packages
 // Will return a slice of original files and a slice of the updated files, with
 // their content
-func applyUpdateSet(updateSet *UpdateSet) (orgDepFiles, uptDepFiles []models.DependencyFile, err error) {
+func applyUpdateSet(updateSet *api.UpdateSet) (orgDepFiles, uptDepFiles []api.DependencyFile, err error) {
 	for packageType, reqUpdates := range updateSet.RequirementUpdates {
 		installer, err := NewRequirementsInstaller(packageType)
 		if err != nil {
@@ -242,7 +209,7 @@ func applyUpdateSet(updateSet *UpdateSet) (orgDepFiles, uptDepFiles []models.Dep
 
 // Once update set has been tested, we must send the result to Gemnasium,
 // in order to update statitics.
-func pushUpdateSetResult(rs *UpdateSetResult) error {
+func pushUpdateSetResult(rs *api.UpdateSetResult) error {
 	fmt.Printf("Pushing result (status='%s'): ", rs.State)
 
 	if rs.UpdateSetID == 0 || rs.State == "" {
@@ -254,12 +221,7 @@ func pushUpdateSetResult(rs *UpdateSetResult) error {
 		return err
 	}
 
-	opts := &gemnasium.APIRequestOptions{
-		Method: "PATCH",
-		URI:    fmt.Sprintf("/projects/%s/revisions/%s/auto_update_steps/%d", rs.ProjectSlug, revision, rs.UpdateSetID),
-		Body:   rs,
-	}
-	err = gemnasium.APIRequest(opts)
+	err = api.APIImpl.AutoUpdateStepsPush(revision, rs)
 	if err != nil {
 		return err
 	}
@@ -270,7 +232,7 @@ func pushUpdateSetResult(rs *UpdateSetResult) error {
 
 // Restore original files.
 // Needed after each run
-func restoreDepFiles(dfiles []models.DependencyFile) error {
+func restoreDepFiles(dfiles []api.DependencyFile) error {
 	fmt.Printf("%d file(s) to be restored.\n", len(dfiles))
 	for _, df := range dfiles {
 		fmt.Printf("Restoring file %s: ", df.Path)
@@ -318,8 +280,8 @@ func executeTestSuite(ts []string) ([]byte, error) {
 }
 
 func checkProject(slug string) error {
-	p := &models.Project{Slug: slug}
-	err := p.Fetch()
+	p := &api.Project{Slug: slug}
+	err := project.ProjectFetch(p)
 	if err != nil {
 		return err
 	}

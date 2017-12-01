@@ -3,27 +3,28 @@ package commands
 import (
 	"os"
 
-	"github.com/gemnasium/toolbelt/models"
 	"github.com/urfave/cli"
+	"github.com/gemnasium/toolbelt/api"
+	"github.com/gemnasium/toolbelt/project"
 )
 
-var confFunc = func(project *models.Project) error {
+var confFunc = func(p *api.Project) error {
 	f, err := os.Create(".gemnasium.yml")
 	if err != nil {
 		return err
 	}
 	defer f.Close()
-	err = project.Configure(project.Slug, os.Stdin, f)
+	err = project.ProjectConfigure(p, p.Slug, os.Stdin, f)
 	return err
 }
 
 func Configure(ctx *cli.Context) error {
 	slug := ctx.Args().First()
-	project, err := models.GetProject(slug)
+	p, err := project.GetProject(slug)
 	if err != nil {
 		return err
 	}
 
-	err = confFunc(project)
+	err = confFunc(p)
 	return err
 }

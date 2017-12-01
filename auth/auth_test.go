@@ -11,7 +11,7 @@ import (
 	"testing"
 
 	"github.com/bgentry/go-netrc/netrc"
-	"github.com/gemnasium/toolbelt/config"
+	"github.com/gemnasium/toolbelt/api"
 )
 
 func TestLoadNetRCFileWithNonExistingFile(t *testing.T) {
@@ -68,10 +68,13 @@ func TestLogin(t *testing.T) {
 	}))
 	defer ts.Close()
 
-	config.APIEndpoint = ts.URL
+	api.APIImpl = api.NewAPIv1(ts.URL, "")
 	// don't try to use stdin
-	getCredentials = func() (email, password string, err error) {
-		return "batman@example.com", "secret123", nil
+	getEmail = func() (email string) {
+		return "batman@example.com"
+	}
+	getPassword = func(prompt string) (password string, err error) {
+		return "secret123", nil
 	}
 
 	netrcFile := bytes.NewBufferString("")
@@ -110,7 +113,7 @@ func TestLogout(t *testing.T) {
 	  password abcxyz123
 	`)
 
-	config.APIEndpoint = "http://127.0.0.1/api"
+	api.APIImpl = api.NewAPIv1("http://127.0.0.1/api", "")
 	loadNetrc = func() *netrc.Netrc {
 		nrc, _ := netrc.Parse(netrcFile)
 		return nrc

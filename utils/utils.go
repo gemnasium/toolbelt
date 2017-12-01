@@ -2,9 +2,7 @@ package utils
 
 import (
 	"fmt"
-	"io"
 	"log"
-	"net/http"
 	"os"
 	"os/exec"
 	"strings"
@@ -23,20 +21,6 @@ func colorizeMessage(color, prefix, message string, args ...interface{}) string 
 		prefResult = ansi.Color(prefix, color+"+b") + " " + ansi.ColorCode("reset")
 	}
 	return prefResult + ansi.Color(fmt.Sprintf(message, args...), color) + ansi.ColorCode("reset")
-}
-
-// Create a new API request, with needed headers for auth and content-type
-func NewAPIRequest(method, urlStr, APIKey string, body io.Reader) (*http.Request, error) {
-	req, err := http.NewRequest(method, urlStr, body)
-	if err != nil {
-		return nil, err
-	}
-	req.SetBasicAuth("x", APIKey)
-	req.Header.Add("Content-Type", "application/json")
-	req.Header.Add("X-Gms-Client-Version", config.VERSION)
-	req.Header.Add("X-Gms-Revision", GetCurrentRevision())
-	req.Header.Add("X-Gms-Branch", GetCurrentBranch())
-	return req, nil
 }
 
 // Return unicode colorized text dots for each status

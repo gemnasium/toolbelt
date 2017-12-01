@@ -6,7 +6,8 @@ import (
 	"testing"
 
 	"github.com/gemnasium/toolbelt/config"
-	"github.com/gemnasium/toolbelt/models"
+	"github.com/gemnasium/toolbelt/api"
+	"github.com/gemnasium/toolbelt/project"
 )
 
 func TestConfigue(t *testing.T) {
@@ -14,8 +15,8 @@ func TestConfigue(t *testing.T) {
 	config.ProjectSlug = "projectSlug"
 
 	var output bytes.Buffer
-	confFunc = func(project *models.Project) error {
-		return project.Configure(project.Slug, os.Stdin, &output)
+	confFunc = func(p *api.Project) error {
+		return project.ProjectConfigure(p, p.Slug, os.Stdin, &output)
 	}
 	app := App()
 

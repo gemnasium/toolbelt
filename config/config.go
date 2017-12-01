@@ -10,9 +10,10 @@ import (
 )
 
 var (
-	APIEndpoint = DEFAULT_API_ENDPOINT
-	APIKey,
-	ProjectSlug string
+	APIEndpoint   = DEFAULT_API_ENDPOINT
+	APIKey       string
+	APIVersion   int = 1
+	ProjectSlug  string
 	IgnoredPaths []string
 	RawFormat    bool
 )

@@ -19,7 +19,7 @@ var (
 )
 
 const (
-	VERSION          = "1.0.1"
+	VERSION          = "1.0.2"
 	CONFIG_FILE_PATH = ".gemnasium.yml"
 
 	// Don't forget to update DisplayEnvVars func bellow when updating vars

@@ -1,3 +1,9 @@
+gemnasium-toolbelt (1.0.2.1) stable; urgency=low
+
+  * Uses Gemnasium depfile library.
+
+ -- Gemnasium <info@gemnasium.com>  Mon, 18 Dec 2017 19:01:42 +0200
+
 gemnasium-toolbelt (1.0.1.1) stable; urgency=low
 
   * Adds compatibility with Gemnasium API version 2.

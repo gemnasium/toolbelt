@@ -1,3 +1,7 @@
+# 1.0.2 / 2017-12-18
+
+* Uses Gemnasium depfile library.
+
 # 1.0.1 / 2017-12-18
 
 * Adds compatibility with version 2 of the Gemnasium API.

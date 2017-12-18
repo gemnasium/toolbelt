@@ -3,24 +3,20 @@ package dependency
 import (
 	"bytes"
 	"crypto/sha1"
+	"encoding/base64"
 	"fmt"
 	"io"
 	"io/ioutil"
 	"os"
 	"os/exec"
 	"path/filepath"
-	"regexp"
 	"strings"
-	"encoding/base64"
 
-	"github.com/gemnasium/toolbelt/config"
-	"github.com/olekukonko/tablewriter"
+	"github.com/gemnasium/depfile"
 	"github.com/gemnasium/toolbelt/api"
+	"github.com/gemnasium/toolbelt/config"
 	"github.com/gemnasium/toolbelt/project"
-)
-
-const (
-	SUPPORTED_DEPENDENCY_FILES = `(Gemfile|Gemfile\.lock|gems\.rb|gems\.locked|.*\.gemspec|package\.json|package-lock\.json|npm-shrinkwrap\.json|yarn\.lock|setup\.py|requirements\.txt|requirements\.pip|requirements.*\.txt|requires\.txt|composer\.json|composer\.lock|bower\.json|pom\.xml)$`
+	"github.com/olekukonko/tablewriter"
 )
 
 func NewDependencyFile(filePath string) *api.DependencyFile {
@@ -170,13 +166,8 @@ var getLocalDependencyFiles = func() ([]*api.DependencyFile, error) {
 			}
 		}
 
-		matched, err := regexp.MatchString(SUPPORTED_DEPENDENCY_FILES, info.Name())
-		if err != nil {
-			return err
-		}
-
-		if matched {
-			fmt.Printf("Found: %s\n", path)
+		if df := depfile.Find(path); df != nil {
+			fmt.Printf("Found: %s (%s)\n", path, df.Name)
 			dfiles = append(dfiles, NewDependencyFile(path))
 		}
 		return nil
@@ -189,7 +180,7 @@ var getLocalDependencyFiles = func() ([]*api.DependencyFile, error) {
 }
 
 // Push project dependencies
-// The current path will be scanned for supported dependency files (SUPPORTED_DEPENDENCY_FILES)
+// The current path will be scanned for supported dependency files.
 func PushDependencyFiles(projectSlug string, files []string) error {
 	dfiles, err := LookupDependencyFiles(files)
 	if err != nil {

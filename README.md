@@ -119,7 +119,7 @@ Currently, only Ruby projects are supported. Follow us to get the latest updates
 The configuration can be saved in ```.gemnasium.yml``` files in the project directory.
 Options set in ```.gemnasium.yml``` are overriden by env vars:
 
-
+ * **GEMNASIUM_API_ENDPOINT**: override the API URL. For Gemnasium enterprise, please use https://gemnasium.my.domain/api/v2
  * **GEMNASIUM_PROJECT_SLUG**: override -project flag and project_slug in .gemnasium.yml.
  * **GEMNASIUM_TESTSUITE**: will be run for each iteration over update sets. This is typically your test suite script.
  * **GEMNASIUM_BUNDLE_INSTALL_CMD**: [Ruby Only] during each iteration, the new bundle will be installed. Default: "bundle install"

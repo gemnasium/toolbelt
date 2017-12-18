@@ -1,3 +1,9 @@
+gemnasium-toolbelt (1.0.1.1) stable; urgency=low
+
+  * Adds compatibility with Gemnasium API version 2.
+
+ -- Gemnasium <info@gemnasium.com>  Mon, 18 Dec 2017 13:56:13 +0200
+
 gemnasium-toolbelt (0.2.10.2) stable; urgency=low
 
   * Signs packages with SHA512 instead of the obsolete SHA1 

@@ -1,3 +1,7 @@
+# 1.0.1 / 2017-12-18
+
+* Adds compatibility with version 2 of the Gemnasium API.
+
 # 0.2.11 / 2017-10-11
 
 * Accept package-lock.json dependency files

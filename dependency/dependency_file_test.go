@@ -156,51 +156,14 @@ func TestGetFileSHA1(t *testing.T) {
 }
 
 func TestGetLocalDependencyFiles(t *testing.T) {
-	// Populate a directory with files
-	dir, err := ioutil.TempDir("", "gemnasium-df")
-	if err != nil {
-		t.Error(err)
-	}
-	var createEmptyFile = func (path string) error {
-		f, err := os.Create(path)
-		if err != nil {
-			return err
-		}
-		return f.Close()
-	}
-	var createDirectory = func (path string) error {
-		return os.Mkdir(path, os.ModeDir | 0700)
-	}
-	defer os.RemoveAll(dir)
-	if err = createEmptyFile(filepath.Join(dir, "Gemfile")) ; err != nil {
-		t.Error(err)
-	}
-	if err = createDirectory(filepath.Join(dir, "node_modules")) ; err != nil {
-		t.Error(err)
-	}
-	if err = createEmptyFile(filepath.Join(dir, "node_modules", "yarn.lock")) ; err != nil {
-		t.Error(err)
-	}
-	if err = createDirectory(filepath.Join(dir, ".bundle")) ; err != nil {
-		t.Error(err)
-	}
-	if err = createEmptyFile(filepath.Join(dir, ".bundle", "package.json")) ; err != nil {
-		t.Error(err)
-	}
-	if err = createDirectory(filepath.Join(dir, "subdir")) ; err != nil {
-		t.Error(err)
-	}
-	if err = createEmptyFile(filepath.Join(dir, "subdir", "gems.rb")) ; err != nil {
-		t.Error(err)
-	}
+	// And get a list of recognised dependency files from test data
 	old_dir, err := os.Getwd()
 	if err != nil {
 		t.Error(err)
 	}
-	if err = os.Chdir(dir) ; err != nil {
+	if err = os.Chdir(filepath.Join("testdata", "test_get_local_dependency_files")) ; err != nil {
 		t.Error(err)
 	}
-	// And get dependency files from it
 	result, err := getLocalDependencyFiles()
 	// Compare with wanted result
 	wantedResult := []*api.DependencyFile{

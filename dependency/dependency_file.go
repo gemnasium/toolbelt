@@ -17,7 +17,6 @@ import (
 	"github.com/gemnasium/toolbelt/config"
 	"github.com/gemnasium/toolbelt/project"
 	"github.com/olekukonko/tablewriter"
-	"regexp"
 )
 
 func NewDependencyFile(filePath string) *api.DependencyFile {
@@ -146,14 +145,15 @@ func ListDependencyFiles(p *api.Project) error {
 
 var getLocalDependencyFiles = func() ([]*api.DependencyFile, error) {
 	dfiles := []*api.DependencyFile{}
-	excludedPathPatterns :=[]*regexp.Regexp{
-		regexp.MustCompile("^(.*/)?node_modules(/.*)?$"),
-		regexp.MustCompile("^(.*/)?\\.bundle(/.*)?$"),
+	excludeDirectory :=map[string]bool{
+		"node_modules": true,
+		".bundle": true,
+		"vendor": true,
 	}
 	searchDeps := func(path string, info os.FileInfo, err error) error {
-		// Skip excluded paths
-		for _, excludedPathPattern := range excludedPathPatterns {
-			if excludedPathPattern.MatchString(path) {
+		// Skip excluded directories
+		for _, pathComponent := range filepath.SplitList(path) {
+			if excludeDirectory[pathComponent] {
 				return filepath.SkipDir
 			}
 		}

@@ -143,7 +143,7 @@ func ListDependencyFiles(p *api.Project) error {
 	return nil
 }
 
-var getLocalDependencyFiles = func() ([]*api.DependencyFile, error) {
+var getLocalDependencyFiles = func(path string) ([]*api.DependencyFile, error) {
 	dfiles := []*api.DependencyFile{}
 	excludeDirectory :=map[string]bool{
 		"node_modules": true,
@@ -178,7 +178,16 @@ var getLocalDependencyFiles = func() ([]*api.DependencyFile, error) {
 		}
 		return nil
 	}
-	err := filepath.Walk(".", searchDeps)
+	// Walk the directory
+	oldDir, err := os.Getwd()
+	if err != nil {
+		return nil, err
+	}
+	if err = os.Chdir(path) ; err != nil {
+		return nil, err
+	}
+	defer os.Chdir(oldDir)
+	err = filepath.Walk(".", searchDeps)
 	if err != nil {
 		return dfiles, err
 	}
@@ -259,7 +268,11 @@ func LookupDependencyFiles(files []string) (dfiles []*api.DependencyFile, err er
 		}
 	} else {
 		fmt.Println("[warning] No files given, scanning current directory instead.")
-		files, err := getLocalDependencyFiles()
+		currentDir, err := os.Getwd()
+		if err != nil {
+			return dfiles, err
+		}
+		files, err := getLocalDependencyFiles(currentDir)
 		if err != nil {
 			return nil, err
 		}

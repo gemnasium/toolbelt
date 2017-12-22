@@ -157,14 +157,7 @@ func TestGetFileSHA1(t *testing.T) {
 
 func TestGetLocalDependencyFiles(t *testing.T) {
 	// And get a list of recognised dependency files from test data
-	old_dir, err := os.Getwd()
-	if err != nil {
-		t.Error(err)
-	}
-	if err = os.Chdir(filepath.Join("testdata", "test_get_local_dependency_files")) ; err != nil {
-		t.Error(err)
-	}
-	result, err := getLocalDependencyFiles()
+	result, err := getLocalDependencyFiles(filepath.Join("testdata", "test_get_local_dependency_files"))
 	// Compare with wanted result
 	wantedResult := []*api.DependencyFile{
 		&api.DependencyFile{
@@ -186,9 +179,6 @@ func TestGetLocalDependencyFiles(t *testing.T) {
 		t.Errorf("Expected output:\n%s\nGot:\n%s\n", prettyString(wantedResult), prettyString(result))
 	}
 	if err != nil || len(result) == 0 {
-		t.Error(err)
-	}
-	if err = os.Chdir(old_dir) ; err != nil {
 		t.Error(err)
 	}
 }
@@ -253,7 +243,7 @@ func TestPushDependencyFiles(t *testing.T) {
 	os.Stdout = w
 	api.APIImpl = api.NewAPIv1(ts.URL, "")
 
-	getLocalDependencyFiles = func() ([]*api.DependencyFile, error) {
+	getLocalDependencyFiles = func(path string) ([]*api.DependencyFile, error) {
 		return []*api.DependencyFile{
 			&api.DependencyFile{Path: "Gemfile", SHA: "Gemfile SHA-1", Content: []byte("Gemfile.lock base64 encoded content")},
 			&api.DependencyFile{Path: "Gemfile.lock", SHA: "Gemfile.lock SHA-1", Content: []byte("Gemfile base64 encoded content")},

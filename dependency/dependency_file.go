@@ -143,7 +143,7 @@ func ListDependencyFiles(p *api.Project) error {
 	return nil
 }
 
-var getLocalDependencyFiles = func(path string) ([]*api.DependencyFile, error) {
+var getLocalDependencyFiles = func(rootPath string) ([]*api.DependencyFile, error) {
 	dfiles := []*api.DependencyFile{}
 	excludeDirectory :=map[string]bool{
 		"node_modules": true,
@@ -151,8 +151,14 @@ var getLocalDependencyFiles = func(path string) ([]*api.DependencyFile, error) {
 		"vendor": true,
 	}
 	searchDeps := func(path string, info os.FileInfo, err error) error {
+		// Get path relative to rootPath, we don't want to take wrongly into account
+		// the elements of rootPath
+		relativePath, err := filepath.Rel(rootPath, path)
+		if err != nil {
+			return err
+		}
 		// Skip excluded directories
-		for _, pathComponent := range filepath.SplitList(path) {
+		for _, pathComponent := range filepath.SplitList(relativePath) {
 			if excludeDirectory[pathComponent] {
 				return filepath.SkipDir
 			}
@@ -173,21 +179,20 @@ var getLocalDependencyFiles = func(path string) ([]*api.DependencyFile, error) {
 		}
 
 		if df := depfile.Find(path); df != nil {
-			fmt.Printf("Found: %s (%s)\n", path, df.Name)
-			dfiles = append(dfiles, NewDependencyFile(path))
+			fmt.Printf("Found: %s (%s)\n", relativePath, df.Name)
+			dfile := NewDependencyFile(path)
+			// Remove the rootPath from the path field of dfile to keep things clean.
+			// we want pathes relative to the project's root
+			dfile.Path, err = filepath.Rel(rootPath, dfile.Path)
+			if err != nil {
+				return err
+			}
+			dfiles = append(dfiles, dfile)
 		}
 		return nil
 	}
 	// Walk the directory
-	oldDir, err := os.Getwd()
-	if err != nil {
-		return nil, err
-	}
-	if err = os.Chdir(path) ; err != nil {
-		return nil, err
-	}
-	defer os.Chdir(oldDir)
-	err = filepath.Walk(".", searchDeps)
+	err := filepath.Walk(rootPath, searchDeps)
 	if err != nil {
 		return dfiles, err
 	}

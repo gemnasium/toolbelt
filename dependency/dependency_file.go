@@ -149,6 +149,7 @@ var getLocalDependencyFiles = func(rootPath string) ([]*api.DependencyFile, erro
 		"node_modules": true,
 		".bundle": true,
 		"vendor": true,
+		".git": true,
 	}
 	searchDeps := func(path string, info os.FileInfo, err error) error {
 		// Get path relative to rootPath, we don't want to take wrongly into account

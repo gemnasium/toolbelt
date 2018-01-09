@@ -165,17 +165,16 @@ var getLocalDependencyFiles = func(rootPath string) ([]*api.DependencyFile, erro
 			}
 		}
 		// Skip ignored_pathes
-		if len(config.IgnoredPaths) > 0 {
-			for _, path := range config.IgnoredPaths {
-				matched, err := filepath.Match(filepath.Clean(path), info.Name())
-				if err != nil {
-					return err
-				}
 
-				if matched {
-					fmt.Println("Skipping", info.Name())
-					return filepath.SkipDir
-				}
+		for _, ignoredPath := range config.IgnoredPaths {
+			matched, err := filepath.Match(filepath.Clean(ignoredPath), info.Name())
+			if err != nil {
+				return err
+			}
+
+			if matched {
+				fmt.Println("Skipping", info.Name())
+				return filepath.SkipDir
 			}
 		}
 

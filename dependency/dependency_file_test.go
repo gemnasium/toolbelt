@@ -15,6 +15,7 @@ import (
 	"path/filepath"
 	"reflect"
 	"encoding/json"
+	"github.com/gemnasium/toolbelt/config"
 )
 
 type TestFile struct {
@@ -172,6 +173,7 @@ func TestGetLocalDependencyFiles(t *testing.T) {
 		b, _ := json.MarshalIndent(v, "", "  ")
 		return string(b)
 	}
+	config.IgnoredPaths = []string{"sub1/sub2/Gemfile", "sub3/sub4"}
 	// Get a list of recognised dependency files from test data
 	result, err := getLocalDependencyFiles(filepath.Join("testdata", "test_get_local_dependency_files"))
 	if err != nil {

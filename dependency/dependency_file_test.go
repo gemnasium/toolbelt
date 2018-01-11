@@ -12,6 +12,10 @@ import (
 	"testing"
 
 	"github.com/gemnasium/toolbelt/api"
+	"path/filepath"
+	"reflect"
+	"encoding/json"
+	"github.com/gemnasium/toolbelt/config"
 )
 
 type TestFile struct {
@@ -152,6 +156,34 @@ func TestGetFileSHA1(t *testing.T) {
 	}
 }
 
+func TestGetLocalDependencyFiles(t *testing.T) {
+	wantedResult := []*api.DependencyFile{
+		&api.DependencyFile{
+			Path: "Gemfile",
+			SHA: "e69de29bb2d1d6434b8b29ae775ad8c2e48c5391",
+			Content: []uint8{},
+		},
+		&api.DependencyFile{
+			Path: "subdir/gems.rb",
+			SHA: "e69de29bb2d1d6434b8b29ae775ad8c2e48c5391",
+			Content: []uint8{},
+		},
+	}
+	var prettyString = func(v interface{}) string {
+		b, _ := json.MarshalIndent(v, "", "  ")
+		return string(b)
+	}
+	config.IgnoredPaths = []string{"sub1/sub2/Gemfile", "sub3/sub4"}
+	// Get a list of recognised dependency files from test data
+	result, err := getLocalDependencyFiles(filepath.Join("testdata", "test_get_local_dependency_files"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !reflect.DeepEqual(result, wantedResult) {
+		t.Errorf("Expected output:\n%s\nGot:\n%s\n", prettyString(wantedResult), prettyString(result))
+	}
+}
+
 func TestListDependencyFiles(t *testing.T) {
 	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		r.Header.Set("Content-Type", "application/json")
@@ -212,7 +244,7 @@ func TestPushDependencyFiles(t *testing.T) {
 	os.Stdout = w
 	api.APIImpl = api.NewAPIv1(ts.URL, "")
 
-	getLocalDependencyFiles = func() ([]*api.DependencyFile, error) {
+	getLocalDependencyFiles = func(path string) ([]*api.DependencyFile, error) {
 		return []*api.DependencyFile{
 			&api.DependencyFile{Path: "Gemfile", SHA: "Gemfile SHA-1", Content: []byte("Gemfile.lock base64 encoded content")},
 			&api.DependencyFile{Path: "Gemfile.lock", SHA: "Gemfile.lock SHA-1", Content: []byte("Gemfile base64 encoded content")},

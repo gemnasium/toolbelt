@@ -1,3 +1,11 @@
+gemnasium-toolbelt (1.0.3.1) stable; urgency=low
+
+  * Ignores node_modules and .bundle directories when searching for
+    dependency files.
+  * GEMNASIUM_IGNORED_PATHS filters path in addition to filenames.
+
+ -- Gemnasium <info@gemnasium.com>  Thu, 11 Jan 2018 14:26:11 +0200
+
 gemnasium-toolbelt (1.0.2.1) stable; urgency=low
 
   * Uses Gemnasium depfile library.
@@ -12,7 +20,7 @@ gemnasium-toolbelt (1.0.1.1) stable; urgency=low
 
 gemnasium-toolbelt (0.2.10.2) stable; urgency=low
 
-  * Signs packages with SHA512 instead of the obsolete SHA1 
+  * Signs packages with SHA512 instead of the obsolete SHA1
 
  -- Gemnasium <info@gemnasium.com>  Mon, 09 Oct 2017 15:18:10 +0200
 

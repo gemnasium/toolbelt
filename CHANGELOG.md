@@ -1,3 +1,9 @@
+# 1.0.3 / 2018-01-11
+
+* Ignores node_modules and .bundle directories when searching for
+  dependency files.
+* GEMNASIUM_IGNORED_PATHS filters path in addition to filenames.
+
 # 1.0.2 / 2017-12-18
 
 * Uses Gemnasium depfile library.

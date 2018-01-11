@@ -156,9 +156,6 @@ func TestGetFileSHA1(t *testing.T) {
 }
 
 func TestGetLocalDependencyFiles(t *testing.T) {
-	// And get a list of recognised dependency files from test data
-	result, err := getLocalDependencyFiles(filepath.Join("testdata", "test_get_local_dependency_files"))
-	// Compare with wanted result
 	wantedResult := []*api.DependencyFile{
 		&api.DependencyFile{
 			Path: "Gemfile",
@@ -175,11 +172,13 @@ func TestGetLocalDependencyFiles(t *testing.T) {
 		b, _ := json.MarshalIndent(v, "", "  ")
 		return string(b)
 	}
+	// Get a list of recognised dependency files from test data
+	result, err := getLocalDependencyFiles(filepath.Join("testdata", "test_get_local_dependency_files"))
+	if err != nil {
+		t.Fatal(err)
+	}
 	if !reflect.DeepEqual(result, wantedResult) {
 		t.Errorf("Expected output:\n%s\nGot:\n%s\n", prettyString(wantedResult), prettyString(result))
-	}
-	if err != nil || len(result) == 0 {
-		t.Error(err)
 	}
 }
 
